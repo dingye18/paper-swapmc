@@ -1,0 +1,17 @@
+*.fls
+acs-*.bib
+*.fdb_latexmk
+*.pdf
+*.bbl
+*.suppinfo
+*.blg
+*.log
+*.aux
+*.out
+*.dvi
+*.gz
+letter.rev.pdf
+letter.rev.ps
+supportinginformation.pdf
+**/.vscode
+*/.DS_Store
