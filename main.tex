@@ -48,29 +48,17 @@
 %% On the other hand, \alsoaffiliation is used on a per author basis
 %% when authors are associated with multiple institutions.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\author{Andrew N. Other}
-\altaffiliation{A shared footnote}
-\author{Fred T. Secondauthor}
-\altaffiliation{Current address: Some other place, Othert\"own,
-Germany}
-\author{I. Ken Groupleader}
-\altaffiliation{A shared footnote}
-\email{i.k.groupleader@unknown.uu}
-\phone{+123 (0)123 4445556}
-\fax{+123 (0)123 4445557}
-\affiliation[Unknown University]
-{Department of Chemistry, Unknown University, Unknown Town}
-\alsoaffiliation[Second University]
-{Department of Chemistry, Second University, Nearby Town}
-\author{Susanne K. Laborator}
-\email{s.k.laborator@bigpharma.co}
-\affiliation[BigPharma]
-{Lead Discovery, BigPharma, Big Town, USA}
-\author{Kay T. Finally}
-\affiliation[Unknown University]
-{Department of Chemistry, Unknown University, Unknown Town}
-\alsoaffiliation[Second University]
-{Department of Chemistry, Second University, Nearby Town}
+\author{Ye Ding}
+\affiliation{ATOMBEAT Inc.}
+\email{dingy01@dp.tech}
+\author{Hang Zheng}
+\affiliation{ATOMBEAT Inc.}
+\author{Xi Chen}
+\affiliation{ATOMBEAT Inc.}
+\author{Dongxu Pan}
+\affiliation{ATOMBEAT Inc.}
+\author{Xinyan Wang}
+\affiliation{ATOMBEAT Inc.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The document title should be given as usual. Some journals require
@@ -78,15 +66,14 @@ Germany}
 %% optional argument to \title.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title[An \textsf{achemso} demo]
-  {A demonstration of the \textsf{achemso} \LaTeX\
-   class\footnote{A footnote for the title}}
+  {Improving binding free energy predictions with Swap Monte Carlo for water sampling}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Some journals require a list of abbreviations or keywords to be
 %% supplied. These should be set up here, and will be printed after
 %% the title and author information, if needed.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\abbreviations{IR,NMR,UV}
+\abbreviations{Free Energy Perturbation, Binding Free Energy, Monte Carlo, Water Sampling, Molecular Dynamics}
 \keywords{American Chemical Society, \LaTeX}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -101,25 +88,25 @@ Germany}
 %% require that it is printed as part of the abstract page. It will
 %% be automatically moved as appropriate.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{tocentry}
+%\begin{tocentry}
 
-Some journals require a graphical entry for the Table of Contents.
-This should be laid out ``print ready'' so that the sizing of the
-text is correct.
+%Some journals require a graphical entry for the Table of Contents.
+%This should be laid out ``print ready'' so that the sizing of the
+%text is correct.
 
-Inside the \texttt{tocentry} environment, the font used is Helvetica
-8\,pt, as required by \emph{Journal of the American Chemical
-Society}.
+%Inside the \texttt{tocentry} environment, the font used is Helvetica
+%8\,pt, as required by \emph{Journal of the American Chemical
+%Society}.
 
-The surrounding frame is 9\,cm by 3.5\,cm, which is the maximum
-permitted for  \emph{Journal of the American Chemical Society}
-graphical table of content entries. The box will not resize if the
-content is too big: instead it will overflow the edge of the box.
+%The surrounding frame is 9\,cm by 3.5\,cm, which is the maximum
+%permitted for  \emph{Journal of the American Chemical Society}
+%graphical table of content entries. The box will not resize if the
+%content is too big: instead it will overflow the edge of the box.
 
-This box and the associated title will always be printed on a
-separate page at the end of the document.
+%This box and the associated title will always be printed on a
+%separate page at the end of the document.
 
-\end{tocentry}
+%\end{tocentry}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The abstract environment will automatically gobble the contents
@@ -365,6 +352,6 @@ automatically add a sentence pointing to the information on-line:
 %% Notice that the class file automatically sets \bibliographystyle
 %% and also names the section correctly.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliography{ref}
+\bibliography{ref, common_ref}
 
 \end{document}
