@@ -133,10 +133,11 @@ Our results demonstrate that SwapMC achieves performance comparable to Grand Can
 %%\YE{TO be completed.}
 
 \section{Method}
+\subsection{Workflow of the Swap Monte Carlo}
 SwapMC was designed to exchange water molecules in and out of the protein cavity during FEP calculations, Fig.~\ref{fgr:scheme} B.
-The cavity region is defined as a spherical space centered at the geometric center of the ligand coordinates\cite{ben2021fast}.
+The cavity region is defined as a spherical space centered at the geometric center of the ligand coordinates\cite{ben2021fast}, $R^{in}$ in Fig.~\ref{fgr:scheme}.
 The radius is half the maximum intra-atomic distance within the ligands, plus an additional 0.3 nanometers for buffer.
-All other areas of the simulation box are considered outside this spherical cavity and will be referred to as OUTER space hereafter, Fig.~\ref{fgr:scheme} A.
+All other areas of the simulation box are considered outside this spherical cavity and will be referred to as $R^{out}$ space hereafter, Fig.~\ref{fgr:scheme} A.
 Thus, the SwapMC algorithm workflow consists of these steps:
 \begin{enumerate}
   \item Randomly decide the exchange direction, ensuring an equal chance of moving water in or out of the cavity.
@@ -147,10 +148,10 @@ Thus, the SwapMC algorithm workflow consists of these steps:
      p_i = \frac{e^{u_i}}{\sum^{N_{src}}_k{e^{u_k}}} \tag{1}    
   \end{equation}
   \item Uniform sampling the potential insertion sites over the destination region.
-  \item Combining sampled sites with 60 orientations   Combining 300 potential insertion sites with 60 orientations of water molecules results in 18,000 possible insertion conformations for a single water molecule.
-  \item Evaluate the interaction energy of each of the 18,000 water molecules in the simulation system, denoted as $u_j$.
-  \item Sequentially iterate over these 18,000 $u_j$ values, and calculate the acceptance ratio using $u_i$ and $u_j$, determine if the conformation is acceptable. If it is, terminate this iteration.
-  \item Restore the deleted water positions using accepted conformation coordinates and set this water molecule's velocity to zero.
+  \item The combination of the sampled sites with 60 orientations of water molecule results in 18,000 possible insertion conformations.
+  \item Evaluate the interaction energy for each of the 18,000 water molecules in the simulated system, denoted as $u_j$.
+  \item Sequentially iterate over these $u_j$ values, and calculate the acceptance ratio using $u_i$ and $u_j$, determine if the conformation is acceptable. If it is, terminate this iteration.
+  \item Replace the deleted water positions by the accepted conformation coordinates and set this water molecule's velocity to zero.
 \end{enumerate}
 
 \begin{figure}
@@ -160,9 +161,17 @@ Thus, the SwapMC algorithm workflow consists of these steps:
   \label{fgr:scheme}
 \end{figure}
 
+\subsection{Detailed Balance in Swap Monte Carlo}
+In the Monte Carlo algorithm, the acceptance ratio between two states $S_i$ and $S_j$ must satisfy detailed balance:
+\begin{equation}\label{eq:acceptance_ratio}
+\frac{g_{S_i S_j} A_{S_i S_j}}{g_{S_j S_i} A_{S_j S_i}}=\frac{P_S_j}{P_S_i}  
+\end{equation}
 
 
 \section{Results}
+
+\subsection{Water Density }
+
 
 \subsection{}
 
