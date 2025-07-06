@@ -163,22 +163,66 @@ Thus, the SwapMC algorithm workflow consists of these steps:
 \subsection{Detailed Balance in Swap Monte Carlo}
 In the Monte Carlo algorithm, the acceptance ratio $A_{S_i, S_j}$ between two states $S_i$ and $S_j$ must satisfy detailed balance:
 \begin{equation}\label{eq:acceptance_ratio}
-\frac{g_{S_i,S_j} A_{S_i,S_j}}{g_{S_j,S_i} A_{S_j,S_i}}=\frac{P_{S_j}}{P_{S_i}}  
+\frac{G_{S_i,S_j} A_{S_i,S_j}}{G_{S_j,S_i} A_{S_j,S_i}}=\frac{P_{S_j}}{P_{S_i}}  
 \end{equation}
 
 Where $P_{S_j}$ and $P_{S_i}$ represent the equilibrium probabilities of states $S_j$ and $S_i$, respectively. 
-The terms $g_{S_i, S_j}$ and $g_{S_j,S_i}$ denote the selection probabilities for transforming state $S_i$ to state $S_j$, and vice versa.
+The terms $G_{S_i, S_j}$ and $G_{S_j, S_i}$ denote the selection probabilities for transforming state $S_i$ to state $S_j$, and vice versa.
 
 Rewrite the Eq.~\ref{eq:acceptance_ratio} in terms of the acceptance ratio $A_{S_i,S_j}$ between two states $S_i$ and $S_j$:
 \begin{equation}\label{eq:acceptance_ratio2}
-\frac{A_{S_i,S_j}}{A_{S_j,S_i}}=\frac{g_{S_j,S_i} P_{S_j}}{g_{S_i,S_j} P_{S_i}}
+\frac{A_{S_i,S_j}}{A_{S_j,S_i}}=\frac{G_{S_j,S_i} P_{S_j}}{G_{S_i,S_j} P_{S_i}}
 \end{equation}
 
-According to the Metropolis criteria, in simulations, the acceptance ratio for transforming state $`i`$ to state $`j`$, denoted as $`A_{ij}`$, is defined as:
+According to the Metropolis criteria, in simulations, the acceptance ratio for transforming state $S_i$ to state $S_j$, denoted as $A_{S_i,S_j}$, is defined as:
 
 \begin{equation}\label{eq:acceptance_ratio3}
-A_{i j}=\min \left\{1, \frac{g_{j i} P_j}{g_{i j} P_i}\right\} \tag{4}
+A_{S_i,S_j}=\min \left\{1, \frac{G_{S_j,S_i} P_{S_j}}{G_{S_i,S_j} P_{S_i}}\right\}
 \end{equation}
+
+In the context of Swap Monte Carlo, state $S_i$ represent the water molecule located in position $\mathbf{x}_i$, and state $S_j$ represents the water molecule located in position $\mathbf{x}_j$, where the other atoms remains fixed.
+
+Thus, the equilibrium probabilities $P_{S_i}$ and $P_{S_j}$ follow a Boltzmann distribution:
+\begin{equation}\label{eq:equilibrium_probability}
+  \begin{aligned}
+  P_{S_i}\left(\mathbf{x}_1, \ldots, \mathbf{x}_i, \ldots\mathbf{x}_n\right) & \propto \frac{e^{n B}}{n!} e^{-\beta U\left(\mathbf{x}_1, \ldots, \mathbf{x}_i,\ldots, \mathbf{x}_n\right)}  \\
+  P_{S_j}\left(\mathbf{x}_1, \ldots, \mathbf{x}_j, \ldots\mathbf{x}_n\right) & \propto \frac{e^{n B}}{n!} e^{-\beta U\left(\mathbf{x}_1, \ldots, \mathbf{x}_j,\ldots, \mathbf{x}_n\right)}
+  \end{aligned}
+\end{equation}
+
+Where $U\left(\mathbf{x}_1, \ldots, \mathbf{x}_i,\ldots, \mathbf{x}_n\right), U\left(\mathbf{x}_1, \ldots, \mathbf{x}_j,\ldots, \mathbf{x}_n\right)$ denotes the potential energy of the states $S_i, S_j$, 
+$\beta = \frac{1}{kT}$ is the inverse temperature, $k$ is the Boltzmann constant, and $n$ is the number of particles in the system.
+A fundamental relationship emerges from the potential energy difference between two states $S_i$ and $S_j$:
+\begin{equation}\label{potential_energy_interaction}
+U\left(\mathbf{x}_1, \ldots, \mathbf{x}_j,\ldots, \mathbf{x}_n\right) - U\left(\mathbf{x}_1, \ldots, \mathbf{x}_i,\ldots, \mathbf{x}_n\right) = u_j - u_i
+\end{equation}
+Where $u_i$ and $u_j$ are the interaction energies of the moved water molecule in states $S_i$ and $S_j$, respectively.
+
+The transition probability matrix element $G_{S_i, S_j}$ quantifies the likelihood of transitioning from state $S_i$ to state $S_j$. 
+Given the statistical independence between molecular deletion and insertion events, 
+the composite transition probability necessarily factorizes as:
+\begin{equation}
+G_{S_i, S_j} = g_{S_i}^{(\text{del})} \cdot g_{S_j}^{(\text{ins})}
+\end{equation}
+where $g_{S_i}^{(\text{del})}$ and $g_{S_j}^{(\text{ins})}$ represent the respective marginal probabilities for molecule removal from state $S_i$ and insertion into state $S_j$. 
+This probabilistic decomposition is algebraically demonstrated in the derivation steps.
+\begin{equation}\label{eq:transition_probability}
+  \begin{aligned}
+G_{S_i, S_j} &= p_i * \frac{1}{18000} = \frac{e^{u_i}}{\sum^{N^{S_i}_{src}}_k{e^{u_k}}} * \frac{1}{18000} \\
+G_{S_j, S_i} &= p_j * \frac{1}{18000} = \frac{e^{u_j}}{\sum^{N^{S_j}_{src}}_k{e^{u_k}}} * \frac{1}{18000}  
+  \end{aligned}
+\end{equation}
+
+The source region cardinalities $N_{\text{src}}^{S_i}$ and $N_{\text{src}}^{S_j}$ in the transition probability elements $G_{S_i, S_j}$ and $G_{S_j, S_i}$ correspond to distinct spatial domains within the simulation framework, 
+as their respective source regions differ between states $S_i$ and $S_j$.
+To formally distinguish these non-overlapping regions, we employ the notation $N_{\text{src}}^{S_i}$ and $N_{\text{src}}^{S_j}$ as domain-specific particle counts.
+
+Through substitution of the components in Eq.~\ref{eq:acceptance_ratio} with the ensemble averages defined in Eq.~\ref{}, 
+we obtained the generalized acceptance criterion:
+\begin{equation}
+A_{S_i, S_j} = \min \left\{1, \frac{\sum^{N^{S_i}_{src}}_k{e^{u_k}}}{\sum^{N^{S_j}_{src}}_k{e^{u_k}}} \right\}
+\end{equation}
+
 
 
 \section{Results}
