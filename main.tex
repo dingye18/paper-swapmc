@@ -161,9 +161,23 @@ Thus, the SwapMC algorithm workflow consists of these steps:
 \end{figure}
 
 \subsection{Detailed Balance in Swap Monte Carlo}
-In the Monte Carlo algorithm, the acceptance ratio between two states $S_i$ and $S_j$ must satisfy detailed balance:
+In the Monte Carlo algorithm, the acceptance ratio $A_{S_i, S_j}$ between two states $S_i$ and $S_j$ must satisfy detailed balance:
 \begin{equation}\label{eq:acceptance_ratio}
 \frac{g_{S_i,S_j} A_{S_i,S_j}}{g_{S_j,S_i} A_{S_j,S_i}}=\frac{P_{S_j}}{P_{S_i}}  
+\end{equation}
+
+Where $P_{S_j}$ and $P_{S_i}$ represent the equilibrium probabilities of states $S_j$ and $S_i$, respectively. 
+The terms $g_{S_i, S_j}$ and $g_{S_j,S_i}$ denote the selection probabilities for transforming state $S_i$ to state $S_j$, and vice versa.
+
+Rewrite the Eq.~\ref{eq:acceptance_ratio} in terms of the acceptance ratio $A_{S_i,S_j}$ between two states $S_i$ and $S_j$:
+\begin{equation}\label{eq:acceptance_ratio2}
+\frac{A_{S_i,S_j}}{A_{S_j,S_i}}=\frac{g_{S_j,S_i} P_{S_j}}{g_{S_i,S_j} P_{S_i}}
+\end{equation}
+
+According to the Metropolis criteria, in simulations, the acceptance ratio for transforming state $`i`$ to state $`j`$, denoted as $`A_{ij}`$, is defined as:
+
+\begin{equation}\label{eq:acceptance_ratio3}
+A_{i j}=\min \left\{1, \frac{g_{j i} P_j}{g_{i j} P_i}\right\} \tag{4}
 \end{equation}
 
 
