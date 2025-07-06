@@ -134,10 +134,10 @@ Our results demonstrate that SwapMC achieves performance comparable to Grand Can
 
 \section{Method}
 \subsection{Workflow of the Swap Monte Carlo}
-SwapMC was designed to exchange water molecules in and out of the protein cavity during FEP calculations, Fig.~\ref{fgr:scheme} B.
-The cavity region is defined as a spherical space centered at the geometric center of the ligand coordinates\cite{ben2021fast}, $R^{in}$ in Fig.~\ref{fgr:scheme}.
+SwapMC was designed to exchange water molecules in and out of the protein cavity during FEP calculations, Fig.~\ref{fig:scheme} B.
+The cavity region is defined as a spherical space centered at the geometric center of the ligand coordinates\cite{ben2021fast}, $R^{in}$ in Fig.~\ref{fig:scheme}.
 The radius is half the maximum intra-atomic distance within the ligands, plus an additional 0.3 nanometers for buffer.
-All other areas of the simulation box are considered outside this spherical cavity and will be referred to as $R^{out}$ space hereafter, Fig.~\ref{fgr:scheme} A.
+All other areas of the simulation box are considered outside this spherical cavity and will be referred to as $R^{out}$ space hereafter, Fig.~\ref{fig:scheme} A.
 Thus, the SwapMC algorithm workflow consists of these steps:
 \begin{enumerate}
   \item Randomly decide the exchange direction, ensuring an equal chance of moving water in or out of the cavity.
@@ -153,18 +153,17 @@ Thus, the SwapMC algorithm workflow consists of these steps:
   \item Sequentially iterate over these $u_j$ values, and calculate the acceptance ratio using $u_i$ and $u_j$, determine if the conformation is acceptable. If it is, terminate this iteration.
   \item Replace the deleted water positions by the accepted conformation coordinates and set this water molecule's velocity to zero.
 \end{enumerate}
-
 \begin{figure}
   \includegraphics[width=0.9\textwidth]{figures/SwapMonteCarlo-scheme.png}
   \caption{Schematic Figure for Swap Monte Carlo (SwapMC) Method.
   The figure illustrates the process of moving water molecules in and out of the protein cavity during simulation.}
-  \label{fgr:scheme}
+  \label{fig:scheme}
 \end{figure}
 
 \subsection{Detailed Balance in Swap Monte Carlo}
 In the Monte Carlo algorithm, the acceptance ratio between two states $S_i$ and $S_j$ must satisfy detailed balance:
 \begin{equation}\label{eq:acceptance_ratio}
-\frac{g_{S_i S_j} A_{S_i S_j}}{g_{S_j S_i} A_{S_j S_i}}=\frac{P_S_j}{P_S_i}  
+\frac{g_{S_i,S_j} A_{S_i,S_j}}{g_{S_j,S_i} A_{S_j,S_i}}=\frac{P_{S_j}}{P_{S_i}}  
 \end{equation}
 
 
