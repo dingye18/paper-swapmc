@@ -154,13 +154,24 @@ GCMC is a statistical mechanics method that allows for the insertion and deletio
 There is also an extended way of GCMC, the Grand Canonical Non-equilibrium candidate Molecular Dynamics (GCNCMD)~\cite{Ge2022, melling2023enhanced, Deng2024}.
 These methods have shown significant improvements in the accuracy of binding free energy calculations.
 Besides, there are also some other methods that can predict the water's distribution in the binding site for a fast equilibration, 
-such as the Grid Inhomogeneous Solvation Theory (GIST)~\cite{Abel2008,Michel2009,Cao2019,Irwin2019} and the hybrid MC/MD method proposed by Ben-Shalom et.al~\cite{ben2021fast}.
+such as the Grid Inhomogeneous Solvation Theory (GIST)~\cite{Abel2008,Michel2009,Cao2019,Irwin2019, Eberhardt2023} and the hybrid MC/MD method proposed by Ben-Shalom et.al~\cite{ben2021fast}.
 But these methods are often computationally expensive and complex to implement. 
 Most MD engines do not support these methods natively, which makes them less accessible for routine use in binding free energy calculations.\\
 \newline
 In this work, we present a novel Swap Monte Carlo (SwapMC) method designed to efficiently sample water molecules in the cavity during binding free energy calculations.
-
-
+SwapMC is a Monte Carlo-based method that allows for the exchange of water molecules in and out of the protein cavity during the simulation.
+The method is implemented in the Uni-FEP framework~\YE{to be cited} within the OpenMM~\cite{Eastman2023} simulation engine.
+By combining the SwapMC method with the NPT ensemble, we can efficiently sample the water molecules in the binding site without the need for complex GCMC implementations.
+Furthermore, with the parallelization run on GPUs, SwapMC can perform the Monte Carlo moves for water molecules in parallel across multiple sites, 
+that improved the sampling efficiency and reduced the computational cost. \\
+\newline
+We begin by describing the SwapMC workflow in Uni-FEP framework, 
+and discussed the how the detailed balance is satisfied in the SwapMC method.
+The acceptance ratio is derived from the detailed balance condition.
+Then, we present the performance of SwapMC in binding free energy calculations on the water sets in Gregory's work~\cite{ross2020enhancing}.
+The water's density distribution in the protein cavity is also analyzed to demonstrate the effectiveness of SwapMC in sampling water molecules.
+Finally, we compare the performance of SwapMC with GCMC in binding free energy calculations,
+and show that SwapMC achieves comparable performance with GCMC in the same test cases.
 
 \section{Method}
 \subsection{Workflow of the Swap Monte Carlo}
@@ -378,7 +389,7 @@ In this work, we have performed the ABFE calculations on the JACS set and compar
 \end{table}
 
 
-\section{Discussion}
+\section{Conclusion and Discussion}
 
 
 
