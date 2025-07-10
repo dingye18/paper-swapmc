@@ -130,12 +130,42 @@ Our results demonstrate that SwapMC achieves performance comparable to Grand Can
 %% Start the main part of the manuscript here.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
-%%\YE{TO be completed.}
+Binding free energy calculation for protein-ligand interactions is an important tool in computational chemistry and drug discovery.
+Mostly, the binding free energy calculations are performed with the free energy perturbation (FEP) method~\cite{jiang2010free, wang2019protein, Qian2024}.
+FEP method employed molecular dynamics (MD) simulation to sample the conformational space of the system.
+Through the perturbation of the ligand in different states, the binding free energy can be calculated with the statistical mechanics.
+Accuracy of the binding free energy calculations is strongly dependent on the force field parameters~\cite{Ding2023, 17c36m, lu2021opls4, he2022recent, vanommeslaeghe2012automationI, vanommeslaeghe2012automationII} 
+and the conformational sampling~\cite{15rex, wang2011replica, hritz2008hamiltonian} of the system.\\
+\newline
+The relative binding free energy (RBFE) calculations are consisted of a series of alchemical transformations, 
+where the ligand is transformed from one state to another in the binding site of the protein.
+And absolute binding free energy (ABFE) calculations are performed by decoupling the ligand from the protein cavity.
+In both cases, the binding free energy calculations are sensitive to the conformational sampling of the system.
+Alchemically changed states often involve the rearrangement of the binding site, 
+which can lead to significant changes in the water distribution in the binding site.
+Especially for the water molecules that are buried in the binding sites,
+sampling these water molecules required a thorough exploration of the conformational space~\cite{zhou2009theory, cozzini2004free, li2007water}, 
+which is a time consuming task in the MD simulations. \\
+\newline
+To address the challenges of water sampling in the binding site during the MD simulations,
+multiple strategies have been proposed to enhance the sampling of water molecules~\cite{Wagle2024,ross2020enhancing,Ge2022,ben2021fast,Deng2024,Liu2025}.
+The most common approach is to use the Grand Canonical Monte Carlo (GCMC) method~\cite{ross2015water, ross2020enhancing, Aldeghi2018, Bodnarchuk2014}.
+GCMC is a statistical mechanics method that allows for the insertion and deletion of water molecules in the binding site during the simulation.
+There is also an extended way of GCMC, the Grand Canonical Non-equilibrium candidate Molecular Dynamics (GCNCMD)~\cite{Ge2022, melling2023enhanced, Deng2024}.
+These methods have shown significant improvements in the accuracy of binding free energy calculations.
+Besides, there are also some other methods that can predict the water's distribution in the binding site for a fast equilibration, 
+such as the Grid Inhomogeneous Solvation Theory (GIST)~\cite{Abel2008,Michel2009,Cao2019,Irwin2019} and the hybrid MC/MD method proposed by Ben-Shalom et.al~\cite{ben2021fast}.
+But these methods are often computationally expensive and complex to implement. 
+Most MD engines do not support these methods natively, which makes them less accessible for routine use in binding free energy calculations.\\
+\newline
+In this work, we present a novel Swap Monte Carlo (SwapMC) method designed to efficiently sample water molecules in the cavity during binding free energy calculations.
+
+
 
 \section{Method}
 \subsection{Workflow of the Swap Monte Carlo}
 SwapMC was designed to exchange water molecules in and out of the protein cavity during FEP calculations, Fig.~\ref{fig:scheme} A.
-Unlike the rectangler region that defined in Ben-Shalom's work~\cite{ben2021fast}, 
+Unlike the rectangular region that defined in Ben-Shalom's work~\cite{ben2021fast}, 
 the cavity region in our protocol is represented by a spherical space that centered at the geometric center of the ligand coordinates, $R^{in}$ in Fig.~\ref{fig:scheme} B.
 The radius is half the maximum intra-atomic distance within the ligands, plus an additional 0.3 nanometers for buffer.
 All other areas of the simulation box are considered outside this spherical cavity and will be referred to $R^{out}$ space hereafter, Fig.~\ref{fig:scheme} B.
@@ -146,12 +176,12 @@ Thus, the SwapMC algorithm workflow consists of these steps:
     Where $u_i$ represents the interaction energy of water molecule $i$ with other atoms in the simulation box. 
     $N_{src}$ denotes the number of exchangeable water molecules in the source region. A higher $u_i$ increases the likelihood of a molecule being selected.
   \begin{equation}\label{eq:selection_probability}
-     p_i = \frac{e^{u_i}}{\sum^{N_{src}}_k{e^{u_k}}} \tag{1}    
+    p_i = \frac{e^{u_i}}{\sum^{N_{src}}_k{e^{u_k}}}    
   \end{equation}
   \item Uniform sampling the potential insertion sites over the destination region.
   \item The combination of the sampled sites with 60 orientations of water molecule results in 18,000 possible insertion conformations.
   \item Evaluate the interaction energy for each of the 18,000 water molecules in the simulated system, denoted as $u_j$.
-  \item Sequentially iterate over the potential insertion confomation, and calculate the acceptance ratio $A_{S_i, S_j}$ using $u_i$ and $u_j$, determine if the conformation is acceptable. 
+  \item Sequentially iterate over the potential insertion conformation, and calculate the acceptance ratio $A_{S_i, S_j}$ using $u_i$ and $u_j$, determine if the conformation is acceptable. 
   If it is, terminate this iteration.
   \item Replace the deleted water positions by the accepted conformation coordinates and set this water molecule's velocity to zero for the simulation stability.
 \end{enumerate}
@@ -243,8 +273,12 @@ and showed a significant improvement in the accuracy of RBFE calculations compar
 In this work, we made a direct comparison of the performance of SwapMC with GCMC in the same test cases.
 All tests were performed with the Uni-FEP framework~\YE{TO be cited}.
 RBFE simulations were performed with the Uni-FEP framework, 
-each replica was run for 5~ns with a time step of 4~fs.
-SwapMC was performed every 500 steps (2~ps) during the simulation.
+each replica was run for 5~\textit{ns} with a time step of 4~\textit{fs}.
+SwapMC was performed every 500 steps (2~\textit{ps}) during the simulation.
+300 potential insertion sites were uniformly sampled in the cavity region for each replica.
+TIP3P~\cite{Jorgensen1983} water model was used in all simulations.
+Ligands parameterization was performed with GAFF2~\cite{he2020fast} and ff14SB~\cite{Maier2015} was used for protein force field.
+
 
 \subsection{Water Sampling in Protein Cavity}
 For a more intuitive understanding of the water displacement in the protein cavity, 
@@ -253,11 +287,13 @@ The transformation of Ligand 9 to Ligand 7 involves the core hopping change of t
 which results in a subtle water distribution change in the protein cavity.
 However, the change of the water distribution in the cavity is hard to be captured by the traditional MD simulations.
 Especially for the structures without pre-equilibration, the water molecules in the cavity region are not well sampled.\\
-\noindent
+\newline
 In the test, we performed the alchemical transformation of Ligand 9 to Ligand 7.
 The water molecules in the cavity region were removed in the input structure of the simulation.
-Fig.~\ref{fig:hsp90} B showed changes of the number of contact water molecules\YE{Introduce the definition about the contact water molecules here.} in the cavity region with different replicas during the alchemical transformation.
-Within the 5~\textit{ns} simulation for each replica, 
+Fig.~\ref{fig:hsp90} B showed changes of the number of contact water molecules.
+Number of contact water molecules is defined as the number of water molecules that are within 5~\textit{Å} from the heavy atoms of the alchemical changed group of the ligands.
+In the cavity region with different replicas during the alchemical transformation.
+Within the 5~\textit{ns} simulation for each replica,
 the number of contact water molecules with SwapMC is significantly higher than that without SwapMC.
 Ligand 7 has larger number of contact water molecules in the cavity region than Ligand 9,
 which is consistent with the ligand structure change.
@@ -275,30 +311,78 @@ With the SwapMC enabled, the RBFE results for the alchemical transformation of L
 \end{figure}
 
 \subsection{Performance on RBFE Calculations}
+Water sampling was significantly improved with the SwapMC method.
+That paved the way for the RBFE calculations with water displacement transformation.
+We have performed the RBFE calculations on the water sets in Gregory's work~\cite{ross2020enhancing}.
+For a fair comparison, we conducted four sets of RBFE calculations for each system:
+With and without SwapMC, and with and without cavity waters (CW.).
+Cavity waters are the crystal waters that located in the 6~\textit{Å} radius of the ligand heavy atoms.
+All simulations were ran with the same protocol as described in the previous section.\\ 
+\newline
+The RBFE results are shown in Table~\ref{tbl:rbfe_watersets}.
+Compared to the results without SwapMC, the RBFE results with SwapMC show a significant improvement in accuracy.
+Besides, SwapMC showed a good consistency in the RBFE results with and without cavity waters in input structure.
+Which indicates the robustness of the SwapMC method in water sampling.
+Furthermore, the RBFE results with SwapMC are comparable to the GCMC results in these systems.
+These results demonstrate that SwapMC can be an effective alternative to GCMC for water sampling in RBFE calculations.
 
 \begin{table}
-  \caption{RBFE Results on Water-sets}
+  \caption{RBFE results for water sets, where CW denotes Cavity Waters. All edges correspond to those utilized in Gregory's study~\cite{ross2020enhancing}. 
+  The ddG RMSE and $R^2$ values are computed using experimental binding free energies. 
+  The unit of ddG RMSE is \textit{kcal/mol}, with $R^2$ presented in parentheses. 
+  The optimal results are highlighted in \textbf{bold}.}
   \label{tbl:rbfe_watersets}
   \begin{tabular}{l|lllll}
     \hline
-    System      & No Cavity Waters + Without SwapMC & No Cavity Waters + With SwapMC & Cavity Waters + Without SwapMC & Cavity Waters + With SwapMC & GCMC by Gregory et.al \\
+    System                    & No CW.     & No CW.        & With CW.    & With CW.     & GCMC by  \\
+    ddG RMSE ($R^2$)          & No SwapMC  & With SwapMC   & No SwapMC   & With SwapMC  & Gregory et.al~\cite{ross2020enhancing} \\
     \hline
-    brd41   & Entry two   \\
-    chk1 & Entry four  \\
-    HSP90_kung five  & Entry five  \\
-    HSP90_Woodhead & Entry eight \\
-    scytalone_dehydratase & Entry nine \\
-    Taf12 & Entry ten \\
-    Thrombin & Entry eleven \\
-    Urokinase & Entry twelve \\
+    Brd4(1)                      & 1.34 (0.67) & 0.87 (0.82) & 1.07 (0.71) & \textbf{0.64 (0.93)} & 1.74 (0.01) \\
+    Chk1                         & 2.99 (0.02) & 1.67 (0.43) & 2.64 (0.10) & 1.70 (0.47) & \textbf{0.78 (0.80)} \\
+    HSP90\_Kung                  & 3.85 (0.11) & 1.51 (0.59) & 3.90 (0.16) & \textbf{1.50} (0.50) & 2.14 (\textbf{0.62}) \\
+    HSP90\_Woodhead              & 2.27 (0.83) & 0.61 (0.98) & 2.25 (0.84) & 0.65 (0.97) & \textbf{0.26} (\textbf{1.00}) \\
+    Scytalone                    & 2.25 (0.73) & 1.45 (0.84) & 1.90 (0.80) & \textbf{1.39 (0.85)} & 1.86 (0.77) \\
+    Taf1(2)                      & 2.01 (0.08) & 0.70 (0.51) & 0.76 (0.34) & 0.66 (0.51) & \textbf{0.66 (0.78)} \\
+    Thrombin                     & 1.37 (0.34) & 1.14 (0.64) & 1.20 (0.46) & \textbf{1.13 (0.66)} & 1.15 (0.49) \\
+    Urokinase                    & 0.74 (0.62) & 0.91 (0.36) & 0.81 (0.52) & 0.94 (0.32) & \textbf{0.70 (0.74)} \\
     \hline
   \end{tabular}
 \end{table}
 
 \subsection{Performance on ABFE Calculations}
+The performance of SwapMC was also evaluated in the absolute binding free energy (ABFE) calculations.
+During the ABFE calculations, the decoupling of the ligand from the protein cavity requires the water molecules in the cavity to be well sampled.
+Reorganization of the water molecules in the cavity region is crucial for the accurate calculation of the binding free energy.
+Previous studies~\cite{Liu2025} have shown that enhancing the sampling of water molecules in the cavity region can improve the convergence of the ABFE calculations.
+In this work, we have performed the ABFE calculations on the JACS set and compared the performance of SwapMC with the results ordinary MD simulations.
+
+
+\begin{table}
+  \caption{ABFE Results for JACS set with and without SwapMC.}
+  \label{tbl:abfe_jacs}
+  \begin{tabular}{l|lllll}
+    \hline
+    System                    & No CW.     & No CW.        & With CW.    & With CW.     & GCMC by  \\
+    ddG RMSE ($R^2$)          & No SwapMC  & With SwapMC   & No SwapMC   & With SwapMC  & Gregory et.al~\cite{ross2020enhancing} \\
+    \hline
+    Brd4(1)                      & 1.34 (0.67) & 0.87 (0.82) & 1.07 (0.71) & \textbf{0.64 (0.93)} & 1.74 (0.01) \\
+    Chk1                         & 2.99 (0.02) & 1.67 (0.43) & 2.64 (0.10) & 1.70 (0.47) & \textbf{0.78 (0.80)} \\
+    HSP90\_Kung                  & 3.85 (0.11) & 1.51 (0.59) & 3.90 (0.16) & \textbf{1.50} (0.50) & 2.14 (\textbf{0.62}) \\
+    HSP90\_Woodhead              & 2.27 (0.83) & 0.61 (0.98) & 2.25 (0.84) & 0.65 (0.97) & \textbf{0.26} (\textbf{1.00}) \\
+    Scytalone                    & 2.25 (0.73) & 1.45 (0.84) & 1.90 (0.80) & \textbf{1.39 (0.85)} & 1.86 (0.77) \\
+    Taf1(2)                      & 2.01 (0.08) & 0.70 (0.51) & 0.76 (0.34) & 0.66 (0.51) & \textbf{0.66 (0.78)} \\
+    Thrombin                     & 1.37 (0.34) & 1.14 (0.64) & 1.20 (0.46) & \textbf{1.13 (0.66)} & 1.15 (0.49) \\
+    Urokinase                    & 0.74 (0.62) & 0.91 (0.36) & 0.81 (0.52) & 0.94 (0.32) & \textbf{0.70 (0.74)} \\
+    \hline
+  \end{tabular}
+\end{table}
 
 
 \section{Discussion}
+
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The "Acknowledgement" section can be given in all manuscript
