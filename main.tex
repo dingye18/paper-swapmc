@@ -114,13 +114,16 @@
 %% if an abstract is not used by the target journal.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-Water molecules within and around the binding cavity can significantly influence the binding affinity of ligands. 
+Water molecules located within and surrounding the binding cavity can substantially affect ligand binding affinity.
 Proper sampling of these water molecules ensures that their contributions to the free energy landscape are accurately accounted for. 
 In the pursuit of more accurate binding free energy calculations, we have developed a novel Swap Monte Carlo (SwapMC) method specifically designed for cavity water sampling. 
-The SwapMC method aims to enhance the sampling efficiency by facilitating the movement of water molecules in and out of the protein cavity, thereby ensuring a comprehensive exploration of water distributions. 
-By leveraging GPU power to perform Monte Carlo moves for water molecules in parallel across multiple sites, and integrating SwapMC with NPT simulations within the Uni-FEP framework, 
+The SwapMC method aims to enhance the sampling efficiency by facilitating the movement of water molecules in and out of the protein cavity, 
+thereby ensuring a comprehensive exploration of water distributions. 
+By leveraging GPU power to perform Monte Carlo moves for water molecules in parallel across multiple sites, 
+and integrating SwapMC with NPT simulations within the Uni-FEP framework, 
 we have observed significant improvements in the accuracy of relative binding free energy calculations, all while maintaining computational efficiency. 
-Our results demonstrate that SwapMC achieves performance comparable to Grand Canonical Monte Carlo (GCMC) methods in water-related test cases, offering a robust and efficient alternative for addressing the challenges associated with cavity water sampling in computational chemistry. 
+Our results demonstrate that SwapMC achieves performance comparable to Grand Canonical Monte Carlo (GCMC) methods in water-related test cases, 
+offering a robust and efficient alternative for addressing the challenges associated with cavity water sampling in molecular dynamics. 
 %Furthermore, we have extended the SwapMC scheme to sample the distribution of ions in DNA/RNA simulations, 
 %broadening the applicability of this method to a wider range of biomolecular systems and enhancing the accuracy of ion-related free energy calculations.
 \end{abstract}
@@ -131,26 +134,37 @@ Our results demonstrate that SwapMC achieves performance comparable to Grand Can
 \section{Introduction}
 Binding free energy calculation for protein-ligand interactions is an important tool in computational chemistry and drug discovery.
 Mostly, the binding free energy calculations are performed with the free energy perturbation (FEP) method~\cite{jiang2010free, wang2019protein, Qian2024}.
-FEP method employed molecular dynamics (MD) simulation to sample the conformational space of the system.
+FEP method employed molecular dynamics (MD) simulation to sample the conformation space of the system.
 Through the perturbation of the ligand in different states, the binding free energy can be calculated with the statistical mechanics.
 Accuracy of the binding free energy calculations is strongly dependent on the force field parameters~\cite{Ding2023, 17c36m, lu2021opls4, he2022recent, vanommeslaeghe2012automationI, vanommeslaeghe2012automationII} 
-and the conformational sampling~\cite{15rex, wang2011replica, hritz2008hamiltonian} of the system.\\
+and the sampling over the conformation space~\cite{15rex, wang2011replica, hritz2008hamiltonian} of the system.
+Free energy perturbation (FEP) is increasingly utilized in structure-based drug design to optimize ligand selectivity and affinity.\\
 \newline
-The relative binding free energy (RBFE) calculations are consisted of a series of alchemical transformations, 
+FEP calculations can be broadly categorized into two types: relative binding free energy (RBFE) calculations and absolute binding free energy (ABFE) calculations.
+The RBFE calculations are consisted of a series of alchemical transformations, 
 where the ligand is transformed from one state to another in the binding site of the protein.
-And absolute binding free energy (ABFE) calculations are performed by decoupling the ligand from the protein cavity.
+And ABFE calculations are performed by decoupling the ligand from the protein cavity.
 In both cases, the binding free energy calculations are sensitive to the conformational sampling of the system.
 Alchemically changed states often involve the rearrangement of the binding site, 
-which can lead to significant changes in the water distribution in the binding site.
-Especially for the water molecules that are buried in the binding sites,
-sampling these water molecules required a thorough exploration of the conformational space~\cite{zhou2009theory, cozzini2004free,li2007water}, 
+which can lead to significant changes in the water distribution of the binding pocket.
+Sampling water molecules buried in binding sites necessitates a comprehensive exploration of the conformational space~\cite{zhou2009theory, cozzini2004free,li2007water}, 
 which is a time consuming task in the MD simulations. \\
 \newline
 To address the challenges of water sampling in the binding site during the MD simulations,
 multiple strategies have been proposed to enhance the sampling of water molecules~\cite{Wagle2024,ross2020enhancing,Ge2022,ben2021fast,Deng2024,Liu2025}.
 The most common approach is to use the Grand Canonical Monte Carlo (GCMC) method~\cite{ross2015water, ross2020enhancing, Aldeghi2018, Bodnarchuk2014, deng2008computation, Samways2020, Woo2004}.
-GCMC is a statistical mechanics method that allows for the insertion and deletion of water molecules in the binding site during the simulation.
-There is also an extended way of GCMC, the Grand Canonical Non-equilibrium candidate Molecular Dynamics (GCNCMD)~\cite{Bergazin2020,Ge2022,melling2023enhanced,Deng2024}.
+GCMC allowed the insertion and deletion move of water molecules in the binding site during the MD simulations.
+Water molecules moves that are accepted or rejected based on the Metropolis criteria.
+The detailed balance condition is satisfied by the acceptance ratio derived from the chemical potential and the interaction energy of the water molecules.
+Insertion and deletion moves enable efficient sampling of the position and number of water molecules in the binding site,
+which improves the accuracy of binding free energy calculations.
+However, the acceptance ratio of GCMC is often low due to the high density of water molecules in the binding site.
+An extended way of GCMC is the Nonequilibrium Candidate Monte Carlo (GCNCMC)~\cite{Bergazin2020,Ge2022,melling2023enhanced,Deng2024},
+that combines nonequilibrium dynamics with Monte Carlo moves to enhance the acceptance ratio of water insertion and deletion moves.
+The relaxtion of the system during the nonequilibrium dynamics improves the sampling efficiency of water molecules in the binding site.
+
+%There is also an extended way of GCMC, the Grand Canonical Non-equilibrium candidate Molecular Dynamics (GCNCMD)~\cite{Bergazin2020,Ge2022,melling2023enhanced,Deng2024}.
+
 These methods have shown significant improvements in the accuracy of binding free energy calculations.
 Besides, there are also some other methods that can predict the water's distribution in the binding site for a fast equilibration, 
 such as the Grid Inhomogeneous Solvation Theory (GIST)~\cite{Abel2008,Michel2009,Cao2019,Irwin2019,Eberhardt2023} and the hybrid MC/MD method proposed by Ben-Shalom et.al~\cite{BenShalom2019,ben2021fast}.
