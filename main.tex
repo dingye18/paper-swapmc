@@ -156,7 +156,8 @@ as conventional molecular dynamics simulations face severe kinetic bottlenecks i
 Water exchange between buried cavities and bulk solvent occurs on microsecond timescales—well beyond typical FEP simulation lengths—creating a fundamental disconnection between fast local dynamics and slow water exchange processes~\cite{persson2008cell, kaieda2013internal}. 
 During alchemical transformations, perturbations to the ligand structure frequently alter the optimal water distribution in the binding pocket, 
 requiring accurate sampling of water occupancy at multiple sites~\cite{zhou2009theory, cozzini2004free,li2007water}. 
-When water molecules cannot equilibrate on the simulation timescale, FEP calculations yield systematically biased free energy estimates with errors exceeding 5 kcal\/mol—far larger than typical differences between structurally related compounds in lead optimization~\cite{ross2020enhancing}. 
+When water molecules cannot equilibrate on the simulation timescale, 
+FEP calculations yield systematically biased free energy estimates with errors exceeding 5 kcal/mol—far larger than typical differences between structurally related compounds in lead optimization~\cite{ross2020enhancing}. 
 The magnitude of this problem scales with binding site topology: solvent-exposed sites show minimal impact from sampling limitations, 
 while deeply buried cavities with constricted access channels exhibit severe convergence problems. 
 This sampling limitation has been recognized as a primary barrier to expanding FEP calculations to more challenging protein-ligand systems in drug discovery. \\
@@ -164,7 +165,7 @@ This sampling limitation has been recognized as a primary barrier to expanding F
 Multiple strategies have been proposed to enhance water sampling in binding sites~\cite{Wagle2024,ross2020enhancing,Ge2022,ben2021fast,Deng2024,Liu2025}. 
 Grand Canonical Monte Carlo (GCMC) enables insertion and deletion of water molecules during MD simulations, 
 with acceptance determined by the Metropolis criterion based on chemical potential~\cite{ross2015water, ross2020enhancing, Aldeghi2018, Bodnarchuk2014, deng2008computation, Samways2020, Woo2004}, 
-and has demonstrated substantial improvements in FEP accuracy, reducing prediction errors from >3 kcal/mol to <1.5 kcal/mol for systems with water displacement~\cite{ross2020enhancing}. 
+and has demonstrated substantial improvements in FEP accuracy, reducing prediction errors from $<$3 kcal/mol to $<$1.5 kcal/mol for systems with water displacement~\cite{ross2020enhancing}.
 Grand Canonical Nonequilibrium Candidate Monte Carlo (GCNCMC) combines GCMC with nonequilibrium dynamics to improve acceptance rates, achieving 5-10 times higher acceptance than standard GCMC while maintaining detailed balance~\cite{Bergazin2020,Ge2022,melling2023enhanced,Deng2024}. 
 Grid Inhomogeneous Solvation Theory (GIST) computes spatially resolved solvation thermodynamics on a 3D grid to characterize favorable and unfavorable water positions~\cite{Abel2008,Michel2009,Cao2019,Irwin2019,Eberhardt2023}, 
 while WaterMap clusters high-occupancy hydration sites and computes their thermodynamic contributions to binding~\cite{wang2011ligand}. 
@@ -191,35 +192,55 @@ demonstrate its ability to sample water distributions in protein cavities throug
 and show that SwapMC achieves comparable performance with GCMC. 
 These results demonstrate that SwapMC provides an effective, accessible, and robust solution for incorporating proper water sampling into routine binding free energy calculations.
 \section{Method}
+The Swap Monte Carlo (SwapMC) method enhances water sampling in protein cavities by facilitating exchange of water molecules between the binding region and bulk solvent. 
+Unlike Grand Canonical Monte Carlo (GCMC), which inserts or deletes water molecules, 
+SwapMC maintains constant particle number within the NPT ensemble, 
+thereby avoiding the need for chemical potential calibration. 
+This section describes the algorithmic workflow, theoretical foundations ensuring detailed balance, 
+and GPU-accelerated implementation within the Uni-FEP framework.
+
 \subsection{Workflow of the Swap Monte Carlo}
-SwapMC was designed to exchange water molecules in and out of the protein cavity during FEP calculations, Fig.~\ref{fig:scheme} A.
-Unlike the rectangular region that defined in Ben-Shalom's work~\cite{ben2021fast}, 
-the cavity region in our protocol is represented by a spherical space that centered at the geometric center of the ligand coordinates, $R^{in}$ in Fig.~\ref{fig:scheme} B.
-The radius is half the maximum intra-atomic distance within the ligands, plus an additional 0.3 nanometers for buffer.
-All other areas of the simulation box are considered outside this spherical cavity and will be referred to $R^{out}$ space hereafter, Fig.~\ref{fig:scheme} B.
-Thus, the SwapMC algorithm workflow consists of these steps:
+The SwapMC algorithm facilitates water exchange between the cavity region and bulk solvent during FEP calculations, Fig.~\ref{fig:scheme} A.
+The cavity region ($R^{in}$ in Fig.~\ref{fig:scheme} B) is defined as a spherical volume centered at the geometric centroid of the ligand heavy atoms, with radius $r_{cavity}$ calculated as: $r_{cavity} = \frac{1}{2} \cdot \max_{i,j} \parallel \mathbf{r_i} - \mathbf{r_j} \parallel + 0.3 \text{~nm}$,
+where $r_i$ and $r_j$ denote positions of ligand heavy atoms $i$ and $j$. 
+This buffer distance (0.3~nm) ensures inclusion of the first hydration shell beyond the ligand van der Waals surface. 
+The exterior region ($R^{out}$ in Fig.~\ref{fig:scheme} B) comprises all simulation volume outside $R^{in}$.
+This approach reduces computational overhead from MC moves on waters distant from the binding site, compared to the fixed rectangular regions employed by Ben-Shalom et al~\cite{ben2021fast}. \\
+\newline
+The SwapMC algorithm workflow consists of these steps:
 \begin{enumerate}
   \item Randomly decide the exchange direction, ensuring an equal chance of moving water in or out of the cavity.
-  \item A water molecule $i$ is chosen for deletion from the source region with the probability defined in Eq.~\ref{eq:selection_probability}. Where $u_i$ represents the interaction energy of water molecule $i$ with other atoms in the simulation box. $N_{src}$ denotes the number of exchangeable water molecules in the source region. A higher $u_i$ increases the likelihood of a molecule being selected. 
+  \item Biased water selection. The algorithm selects a water molecule $i$ for deletion from the source region with probability $p_i$ given by Eq.~\ref{eq:selection_probability}. This Boltzmann-weighted selection biases toward waters with higher (less favorable) interaction energies $u_i$, 
+  thereby increasing acceptance rates for swaps that replace unfavorable waters with potentially favorable configurations.
+  Here, $N_{src}$ denotes the number of exchangeable water molecules in the source region ($R_{in}$ for cavity $\to$ bulk moves; $R_{out}$ for bulk $\to$ cavity moves). 
+  The selection probabilities are normalized such that $\sum_{k} p_k$ = 1.
   \begin{equation}\label{eq:selection_probability}
     p_i = \frac{e^{u_i}}{\sum^{N_{src}}_k{e^{u_k}}}    
   \end{equation}
-  \item Uniform sampling the potential insertion sites over the destination region.
-  \item The combination of the sampled sites with 60 orientations of water molecule results in 18,000 possible insertion conformations.
-  \item Evaluate the interaction energy for each of the 18,000 water molecules in the simulated system, denoted as $u_j$.
-  \item Sequentially iterate over the potential insertion conformation, and calculate the acceptance ratio $A_{S_i \to S_j}$ using $u_i$ and $u_j$, determine if the conformation is acceptable. 
-  If it is, terminate this iteration.
-  \item Replace the deleted water positions by the accepted conformation coordinates and set this water molecule's velocity to zero for the simulation stability.
+  %\item Uniform sampling the potential insertion sites over the destination region.
+  \item Parallel energy evaluation. The combination of 300 uniformly sampled insertion sites with 60 water orientations yields 18,000 candidate insertion conformations per swap attempt. 
+  Water orientations were sampled using 60 approximately uniformly distributed unit quaternions~\cite{karney2007quaternions}, providing systematic coverage of the rotation group SO(3).
+  Interaction energies $u_j$ for all candidate conformations are evaluated in parallel on GPUs using our custom OpenMM nonbonded interaction module, enabling efficient exploration of the insertion phase space within milliseconds per swap attempt.
+  \item The potential insertion conformations are sequentially evaluated. 
+  For each conformation, the acceptance ratio $A_{S_i \to S_j}$ is calculated according to Eq.~\ref{eq:acceptance_ratio}. 
+  The first conformation to satisfy the Metropolis criterion (random number  $< A_{S_i \to S_j}$) is accepted, and the iteration proceeds to Step 5.
+  \item Atomic coordinates of the deleted water molecule are updated to match the accepted conformation. 
+  The velocity vector of this water molecule is reset to zero to maintain numerical stability in the subsequent MD steps.
 \end{enumerate}
 
 \begin{figure}
   \includegraphics[width=0.9\textwidth]{figures/SwapMonteCarlo-scheme.png}
   \caption{Schematic Figure for Swap Monte Carlo (SwapMC) Method.
-  The figure illustrates the process of moving water molecules in and out of the protein cavity during simulation.}
+  The figure illustrates the process of exchanging water molecules between the cavity region and bulk solvent during simulation.}
   \label{fig:scheme}
 \end{figure}
 
 \subsection{Detailed Balance in Swap Monte Carlo}
+To ensure SwapMC samples the correct canonical (NPT) ensemble, 
+the acceptance criterion must satisfy detailed balance—a fundamental requirement guaranteeing that the equilibrium distribution is a stationary solution of the Markov chain. 
+We derive the acceptance ratio $A_{S_i \to S_j}$ by requiring microscopic reversibility between states $S_i$ and $S_j$, 
+which differ only in the position of a single water molecule while all other atoms remain fixed. \\
+\newline
 In the Monte Carlo algorithm, the acceptance ratio $A_{S_i \to S_j}$ between two states $S_i$ and $S_j$ must satisfy detailed balance:
 \begin{equation}\label{eq:acceptance_ratio}
 \frac{A_{S_i \to S_j}}{A_{S_j \to S_i}}=\frac{G_{S_j \to S_i} P_{S_j}}{G_{S_i \to S_j} P_{S_i}}
@@ -229,18 +250,21 @@ The terms $G_{S_i \to S_j}$ and $G_{S_j \to S_i}$ denote the transition probabil
 As the Metropolis criteria indicated, in simulations, the acceptance ratio $A_{S_i \to S_j}$ for the transformation from state $S_i$ to $S_j$, is defined as:
 \begin{equation}\label{eq:metropolis}
 A_{S_i \to S_j}=\min \left\{1, \frac{G_{S_j \to S_i} P_{S_j}}{G_{S_i \to S_j} P_{S_i}}\right\}
-\end{equation} \\
-\newline
+\end{equation} 
 In the context of Swap Monte Carlo, state $S_i$ represent the water molecule located in position $\mathbf{x}_i$, and state $S_j$ represents the water molecule located in position $\mathbf{x}_j$, where the other atoms remains fixed.
-Thus, the equilibrium probabilities $P_{S_i}$ and $P_{S_j}$ followed a Boltzmann distribution in the grand canonical ensemble, expressed as:
+In the canonical (NPT) ensemble at fixed particle number $n$, the equilibrium probability of a microstate follows the Boltzmann distribution. 
+For states $S_i$ and $S_j$ differing only in a water molecule position:
 \begin{equation}\label{eq:equilibrium_probability}
   \begin{aligned}
-  P_{S_i}\left(\mathbf{x}_1, \ldots, \mathbf{x}_i, \ldots\mathbf{x}_n\right) & \propto \frac{e^{n B}}{n!} e^{-\beta U\left(\mathbf{x}_1, \ldots, \mathbf{x}_i,\ldots, \mathbf{x}_n\right)}  \\
-  P_{S_j}\left(\mathbf{x}_1, \ldots, \mathbf{x}_j, \ldots\mathbf{x}_n\right) & \propto \frac{e^{n B}}{n!} e^{-\beta U\left(\mathbf{x}_1, \ldots, \mathbf{x}_j,\ldots, \mathbf{x}_n\right)}
+  P_{S_i}\left(\mathbf{x}_1, \ldots, \mathbf{x}_i, \ldots\mathbf{x}_n\right) & \propto \frac{1}{n!} e^{-\beta U\left(\mathbf{x}_1, \ldots, \mathbf{x}_i,\ldots, \mathbf{x}_n\right)}  \\
+  P_{S_j}\left(\mathbf{x}_1, \ldots, \mathbf{x}_j, \ldots\mathbf{x}_n\right) & \propto \frac{1}{n!} e^{-\beta U\left(\mathbf{x}_1, \ldots, \mathbf{x}_j,\ldots, \mathbf{x}_n\right)}
   \end{aligned}
 \end{equation} 
-Where $U\left(\mathbf{x}_1, \ldots, \mathbf{x}_i,\ldots, \mathbf{x}_n\right), U\left(\mathbf{x}_1, \ldots, \mathbf{x}_j,\ldots, \mathbf{x}_n\right)$ denotes the potential energy of the states $S_i, S_j$, 
-$\beta = \frac{1}{kT}$ is the inverse temperature, $k$ is the Boltzmann constant, and $n$ is the number of particles in the system.
+where the factor $1/n!$ accounts for indistinguishability of identical water molecules, 
+$ \beta = 1/k_B T $ is the inverse temperature, $k_B$ is Boltzmann's constant. 
+The $n!$ terms cancel when computing probability ratios, simplifying the acceptance criterion derivation.
+And $U\left(\mathbf{x}_1, \ldots, \mathbf{x}_i,\ldots, \mathbf{x}_n\right)$, $U\left(\mathbf{x}_1, \ldots, \mathbf{x}_j,\ldots, \mathbf{x}_n\right)$ denotes the potential energy of the states $S_i, S_j$.
+%$\beta = \frac{1}{kT}$ is the inverse temperature, $k$ is the Boltzmann constant, and $n$ is the number of particles in the system.
 A fundamental relationship emerges from the potential energy difference between two states $S_i$ and $S_j$:
 \begin{equation}\label{eq:potential_energy_interaction}
 U\left(\mathbf{x}_1, \ldots, \mathbf{x}_j,\ldots, \mathbf{x}_n\right) - U\left(\mathbf{x}_1, \ldots, \mathbf{x}_i,\ldots, \mathbf{x}_n\right) = u_j - u_i
@@ -265,13 +289,20 @@ G_{S_j \to S_i} &= p_j \cdot \frac{1}{V_{S_i}} = \frac{e^{u_j}}{\sum^{N^{S_j}_{s
   \end{aligned}
 \end{equation}
 Where $V_{S_i}$ and $V_{S_j}$ denote the volume of the source region in states $S_i$ and $S_j$, respectively.
-The source region cardinalities $N_{\text{src}}^{S_i}$ and $N_{\text{src}}^{S_j}$ in the transition probability elements $G_{S_i \to S_j}$ and $G_{S_j \to S_i}$ correspond to distinct spatial domains within the simulation framework, 
-as their respective source regions differ between the transformation $S_i \to S_j$ and $S_j \to S_i$.
-Assume the position $\mathbf{x}_i$ is within the cavity region $R^{in}$, and the position $\mathbf{x}_j$ is outside the cavity region $R^{out}$.
-The source region $N_{\text{src}}^{S_i}$ is defined as the set of water molecules within the cavity region $R^{in}$, 
-and the source region $N_{\text{src}}^{S_j}$ is defined as the set of water molecules outside the cavity region $R^{out}$ plus the moved water molecule in position $\textbf{x}_j$. \\
-%To formally distinguish these non-overlapping regions, we employ the notation $N_{\text{src}}^{S_i}$ and $N_{\text{src}}^{S_j}$ as domain-specific particle counts.
+%Critical asymmetry in source regions. 
+The cardinalities $N_{\text{src}}^{S_i}$ and $N_{\text{src}}^{S_j}$ differ because the source regions for forward ($S_i \to S_j$) and reverse ($S_j \to S_i$) transformations are complementary. 
+For a cavity$\to$bulk move ($x_i \in R^{in}$, $x_j \in R^{out}$): \\
+Forward source region: $$N^{S_i}_{\text{src}} = |\text{waters in } R^{in}|$$ \\
+Reverse source region: $$N^{S_j}_{\text{src}} = |\text{waters in } R^{out}| + 1$$ \\
+The "+1" accounts for the newly placed water at $x_j$, which becomes eligible for selection in the reverse move. 
+This asymmetry is essential for satisfying detailed balance and is reflected in the ratio of partition functions in Eq.~\ref{eq:acceptance_criterion}. \\
 \newline
+%The source region cardinalities $N_{\text{src}}^{S_i}$ and $N_{\text{src}}^{S_j}$ in the transition probability elements $G_{S_i \to S_j}$ and $G_{S_j \to S_i}$ correspond to distinct spatial domains within the simulation framework, 
+%as their respective source regions differ between the transformation $S_i \to S_j$ and $S_j \to S_i$.
+%Assume the position $\mathbf{x}_i$ is within the cavity region $R^{in}$, and the position $\mathbf{x}_j$ is outside the cavity region $R^{out}$.
+%The source region $N_{\text{src}}^{S_i}$ is defined as the set of water molecules within the cavity region $R^{in}$, 
+%and the source region $N_{\text{src}}^{S_j}$ is defined as the set of water molecules outside the cavity region $R^{out}$ plus the moved water molecule in position $\textbf{x}_j$. \\
+%To formally distinguish these non-overlapping regions, we employ the notation $N_{\text{src}}^{S_i}$ and $N_{\text{src}}^{S_j}$ as domain-specific particle counts.
 By substitute the components in Eq.~\ref{eq:metropolis} with the Eq.~\ref{eq:equilibrium_probability},~\ref{eq:potential_energy_interaction},~\ref{eq:transition_probability},
 we obtained the acceptance criterion for the exchange of water molecules in transition $S_i \to S_j$:
 \begin{equation}\label{eq:acceptance_criterion}
@@ -279,14 +310,31 @@ A_{S_i \to S_j} = \min \left\{1, \frac{V_{S_j}}{V_{S_i}} \cdot \frac{\sum^{N^{S_
 \end{equation}
 \noindent The acceptance criterion required the calculations on the interaction energies $u_k$ of all water molecules in the source region $N^{S_i}_{src}$ or $N^{S_j}_{src}$,
 which can be efficiently performed in parallel on GPUs.
-\subsection{Implementation of Swap Monte Carlo in Uni-FEP}
-To implement the SwapMC method in the Uni-FEP framework, we have rewritten the non-bonded interaction module in OpenMM to support the efficient calculation of interaction energies for water molecules in the simulation box.
-Besides, we have also implemented the interaction energy calculation for the inserted water molecules in the potential insertion sites.
-The evaluation of the interaction energy for each of the 18,000 water molecules in the simulated system is performed in parallel on GPUs,
-allowing for efficient computation of the acceptance ratio $A_{S_i \to S_j}$ for each potential insertion conformation.
-The implementation of SwapMC is designed to be compatible with the existing Uni-FEP framework, 
-without loss of MD simulation performance.
-%\YE{We need to add the performance comparison with NPT here.}
+\subsection{Implementation of Swap Monte Carlo in OpenMM}
+The SwapMC method was implemented within the Uni-FEP framework built upon OpenMM~\cite{Eastman2023}, 
+leveraging GPU acceleration for efficient water sampling. 
+We rewrote OpenMM's nonbonded interaction module to compute per-water interaction energies in parallel, 
+evaluating all water molecules in simulation system across GPU threads simultaneously. 
+A critical optimization leverages OpenMM's native neighbor list infrastructure, which is automatically maintained during MD simulation. 
+Rather than recomputing pair distances, SwapMC inherits this precomputed neighbor list, reducing energy evaluation cost for water-protein interactions by restricting calculations to relevant atoms instead of the full system. 
+Long-range electrostatics in interaction energies are computed using the Reaction-Field method ($\epsilon = 80$) to approximate PME interactions while enabling fully GPU-local computation without global FFT operations. \\
+\newline 
+Water molecule selection from the source region employs the Gumbel-Max Trick for GPU compatibility~\cite{huijben2022review}. 
+This method enables direct parallel sampling by computing log-probabilities and Gumbel noise independently for each water molecule, 
+then selecting via parallel max-reduction in $O(\log N_{\text{src}})$ time. 
+This approach avoids the serial bottleneck of computing cumulative probabilities and sorting, which would severely limit GPU utilization, 
+while remaining theoretically equivalent to rejection-free sampling from the categorical distribution defined by the biased selection probabilities. \\
+\newline
+Following water selection, the method evaluates 18,000 candidate insertion conformations in parallel using the optimized nonbonded module. 
+Each GPU thread computes the interaction energy $u_j$ for one candidate conformation, with data cached in GPU shared memory for efficiency.
+The first conformation satisfying the Metropolis criterion is immediately accepted, terminating the screening loop for that swap attempt.
+This sequential-acceptance strategy maintains detailed balance while ensuring computational efficiency, 
+as finding one acceptable candidate quickly is more efficient than exhaustively scoring all 18,000 candidates. \\
+\newline
+These GPU optimizations enable practical SwapMC sampling for production FEP calculations. 
+Each swap attempt requires ~2 milliseconds on NVIDIA 4090 GPUs (50,000-atom systems, 300 insertion sites). 
+With SwapMC attempts every 1000 MD steps (4 ps with a 4 fs timestep), the simulation throughput decreases by less than 5\% compared to 
+standard MD—a modest overhead that is easily justified by the substantial improvements in water sampling and binding free energy accuracy demonstrated in the Results.
 
 \section{Results}
 For a robust validation of the Swap Monte Carlo method, 
@@ -314,7 +362,7 @@ which results in a subtle water distribution change in the protein cavity.
 However, the change of the water distribution in the cavity is hard to be captured by the traditional MD simulations.
 Especially for the structures without pre-equilibration, the water molecules in the cavity region are not well sampled.\\
 \newline
-In the test, we performed the alchemical transformation of Ligand 9 to Ligand 7.
+In this test, the alchemical transformation was performed between Ligand 9 to Ligand 7.
 The water molecules in the cavity region were removed in the input structure of the simulation.
 Fig.~\ref{fig:hsp90} B showed changes of the number of contact water molecules.
 Number of contact water molecules is defined as the number of water molecules that are within 5~\textit{Å} from the heavy atoms of the alchemical changed group of the ligands.
@@ -396,14 +444,14 @@ Most of the systems show a significant reduction in the dG RMSE, and the $R^2$ v
     System                    & No SwapMC     & With SwapMC    \\
     dG RMSE ($R^2$)           &               &    \\
     \hline
-    BACE                      & 3.27 (0.25) & 2.06 (0.36)  \\
-    CDK2                      & 3.99 (0.09) & 3.73 (0.45)  \\
-    JNK1                      & 2.01 (0.48) & 3.31 (0.50)  \\
-    MCL1                      & 2.05 (0.34) & 1.94 (0.36)  \\
-    P38                       & 3.22 (0.31) & 1.97 (0.48) \\
-    PTP1B                     & 8.78 (0.29) & 7.16 (0.17) \\
-    Thrombin                  & 1.67 (0.35) & 0.82 (0.68) \\
-    TYK2                      & 2.51 (0.40) & 2.10 (0.43) \\
+    BACE                      & 3.27 (0.25) & \textbf{2.68} (0.20)  \\
+    CDK2                      & 3.99 (0.09) & \textbf{2.04} (0.55)  \\
+    JNK1                      & 2.01 (0.48) & \textbf{0.77} (0.63)  \\
+    MCL1                      & 2.05 (0.34) & \textbf{1.67} (0.36)  \\
+    P38                       & 3.22 (0.31) & 3.25 (0.46) \\
+    PTP1B                     & 8.78 (0.29) & \textbf{4.94} (0.33) \\
+    Thrombin                  & 1.67 (0.35) & 1.82 (0.72) \\
+    TYK2                      & 2.51 (0.40) & \textbf{1.35} (0.47) \\
     \hline
   \end{tabular}
 \end{table}
