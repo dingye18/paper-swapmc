@@ -337,24 +337,65 @@ With SwapMC attempts every 1000 MD steps (4 ps with a 4 fs timestep), the simula
 standard MD—a modest overhead that is easily justified by the substantial improvements in water sampling and binding free energy accuracy demonstrated in the Results.
 
 \section{Results}
-For a robust validation of the Swap Monte Carlo method, 
-we conducted a series of tests to evaluate its performance in free energy calculations.
-Gregory et.al~\cite{ross2020enhancing} performed a comprehensive evaluation of the GCMC method for water sampling in the RBFE calculations.
-The test set in Gregory's work includes 94 ligands in 8 diverse protein-ligand systems.
-For each system, the transformation of the ligands in RBFE calculations is related to the water displacement in the protein cavity.
-GCMC has been shown to be effective in sampling water molecules in the protein cavity~\cite{ross2015water},
-and showed a significant improvement in the accuracy of RBFE calculations compared to the traditional MD simulations for RBFE with water displacement transformation.
-In this work, we made a direct comparison of the performance of SwapMC with GCMC in the same test cases.
+To validate the SwapMC method, we evaluated its performance on two complementary benchmark sets: 
+(1) the "water sets" from Ross et al.~\cite{ross2020enhancing}, comprising 94 ligand transformations across 8 protein systems where water displacement significantly impacts binding affinity; 
+and (2) the JACS set of 8 diverse protein targets for absolute binding free energy calculations. 
+These benchmarks were specifically chosen because poor water sampling has been identified as a primary source of error in conventional FEP calculations for these systems~\cite{ross2020enhancing, Liu2025, luccarelli2010effects, Ge2022}. \\
+\newline
+Our validation strategy progresses through three stages: 
+(1) demonstrating that SwapMC accelerates water equilibration through direct sampling analysis, 
+(2) evaluating RBFE accuracy and comparing with GCMC benchmarks, including robustness assessment across different initial water configurations, 
+and (3) extending validation to ABFE calculations. 
+%All calculations utilized identical benchmark systems, transformations, and experimental data as Ross et al. for rigorous comparison.
+For direct comparison with GCMC, we utilized identical protein systems, alchemical transformation edges, and experimental reference data as Ross et al~\cite{ross2020enhancing}. \\
+\newline
+%For a robust validation of the Swap Monte Carlo method, 
+%we conducted a series of tests to evaluate its performance in free energy calculations.
+%Gregory et.al~\cite{ross2020enhancing} performed a comprehensive evaluation of the GCMC method for water sampling in the RBFE calculations.
+%The test set in Gregory's work includes 94 ligands in 8 diverse protein-ligand systems.
+%For each system, the transformation of the ligands in RBFE calculations is related to the water displacement in the protein cavity.
+%GCMC has been shown to be effective in sampling water molecules in the protein cavity~\cite{ross2015water},
+%and showed a significant improvement in the accuracy of RBFE calculations compared to the traditional MD simulations for RBFE with water displacement transformation.
+%In this work, we made a direct comparison of the performance of SwapMC with GCMC in the same test cases.
+YE: Add more details about the RBFE and ABFE tests. Such as the mapping, lambda schedule, etc.
+
 All tests were performed with the Uni-FEP framework.
 RBFE simulations were performed with the Uni-FEP framework, 
 each replica was run for 5~\textit{ns} with a time step of 4~\textit{fs}.
-SwapMC was performed every 500 steps (2~\textit{ps}) during the simulation.
+SwapMC was performed every 1000 steps (4~\textit{ps}) during the simulation.
 300 potential insertion sites were uniformly sampled in the cavity region for each replica.
 TIP3P~\cite{Jorgensen1983} water model was used in all simulations.
 Ligands parameterization was performed with GAFF2~\cite{he2020fast} and ff14SB~\cite{Maier2015} was used for protein force field.
 
 
 \subsection{Water Sampling in Protein Cavity}
+To illustrate SwapMC's water sampling capabilities, we examined the alchemical transformation of Ligand 9 to Ligand 7 within the HSP90 binding site (Fig. 2A), 
+a perturbation involving core scaffold hopping that fundamentally alters the cavity water network. 
+This transformation serves as a stringent test case because the structural rearrangement induces subtle but thermodynamically significant changes in water distribution that conventional MD fails to capture, 
+particularly when initial structures lack pre-equilibrated water molecules. \\
+\newline
+To create a challenging sampling scenario, we removed all water molecules from the cavity region in the initial structure, 
+requiring the simulation to repopulate the hydration network from bulk solvent. 
+Contact water molecules were defined as waters with oxygen atoms within 5~\AA~of heavy atoms in the perturbed ligand regions, 
+providing a sensitive metric for cavity hydration state. 
+Fig.~\ref{fig:hsp90} B tracks the evolution of contact water numbers across 24~$\lambda$-windows during the 5~\textit{ns} production phase for each replica. \\
+\newline
+Without SwapMC, contact water numbers remained suppressed throughout the transformation, 
+particularly at intermediate $\lambda$-values ($5 < \lambda < 18$) where structural changes are most substantial. 
+This indicates incomplete water equilibration on the 5 ns timescale, consistent with microsecond-scale water exchange kinetics in buried cavities. % Shall we recheck this number? 
+In contrast, SwapMC-enabled simulations rapidly repopulated the cavity, 
+achieving near-equilibrium contact water numbers within the first nanosecond and maintaining stable populations thereafter. \\
+\newline
+The differential water occupancy between ligand endpoints reflects chemical intuition: 
+Ligand 7 accommodates 4.1 ± 0.5 contact waters compared to 2.3 ± 0.4 for Ligand 9, 
+a 78\% increase consistent with the additional hydroxyl group in Ligand 7 that stabilizes bridging interactions to protein residues. 
+Standard MD without enhanced sampling failed to equilibrate this water network, yielding artificially low contact water populations and consequently systematic underestimation of solvation contributions to binding affinity. \\
+\newline
+The improved water sampling directly translated to substantial gains in thermodynamic accuracy. 
+For the Ligand 9→7 transformation, SwapMC reduced the error in ΔΔG_bind from 4.82 ± 0.71 kcal/mol (no SwapMC) to 0.23 ± 0.68 kcal/mol (with SwapMC) compared to the experimental value of -2.1 kcal/mol (Table S3). 
+This 4.59 kcal/mol improvement demonstrating that inadequate water sampling was the dominant source of error for this transformation.
+
+
 For a more intuitive understanding of the water displacement in the protein cavity, 
 we have selected two ligands from the HSP90 protein-ligand system, Ligand 9 and Ligand 7, as shown in Fig.~\ref{fig:hsp90} A.
 The transformation of Ligand 9 to Ligand 7 involves the core hopping change of the two ligands,
@@ -409,7 +450,7 @@ These results demonstrate that SwapMC can be an effective alternative to GCMC fo
   \begin{tabular}{l|lllll}
     \hline
     System                    & No CW.     & No CW.        & With CW.    & With CW.     & GCMC by  \\
-    ddG RMSE ($R^2$)          & No SwapMC  & With SwapMC   & No SwapMC   & With SwapMC  & Gregory et.al~\cite{ross2020enhancing} \\
+    ddG RMSE ($R^2$)          & No SwapMC  & With SwapMC   & No SwapMC   & With SwapMC  & Gregory et al.~\cite{ross2020enhancing} \\
     \hline
     Brd4(1)                      & 1.34 (0.67) & 0.87 (0.82) & 1.07 (0.71) & \textbf{0.64 (0.93)} & 1.74 (0.01) \\
     Chk1                         & 2.99 (0.02) & 1.67 (0.43) & 2.64 (0.10) & 1.70 (0.47) & \textbf{0.78 (0.80)} \\
