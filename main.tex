@@ -58,6 +58,8 @@
 \email{xinyan.wang@atombeat.com}
 \author{Rongfeng Zou}
 \affiliation{Atombeat Technology Pte. Ltd., 6 Rafflesr Quay, Singapore.}
+\author{Tianming Qu}
+\affiliation{Atombeat Technology Pte. Ltd., 6 Rafflesr Quay, Singapore.}
 \author{Hang Zheng}
 \affiliation{Atombeat Technology Pte. Ltd., 6 Rafflesr Quay, Singapore.}
 \email{hzheng@atombeat.com}
@@ -170,7 +172,7 @@ Grand Canonical Nonequilibrium Candidate Monte Carlo (GCNCMC) combines GCMC with
 Grid Inhomogeneous Solvation Theory (GIST) computes spatially resolved solvation thermodynamics on a 3D grid to characterize favorable and unfavorable water positions~\cite{Abel2008,Michel2009,Cao2019,Irwin2019,Eberhardt2023}, 
 while WaterMap clusters high-occupancy hydration sites and computes their thermodynamic contributions to binding~\cite{wang2011ligand}. 
 Hybrid Monte Carlo/Molecular Dynamics methods supplement standard MD with translational MC moves for water molecules without requiring chemical potential determination or handling variable particle numbers~\cite{BenShalom2019,ben2021fast}. 
-However, these methods face common limitations: GCMC and GCNCMC require system-dependent chemical potential calibration; 
+However, these methods face different limitations: GCMC and GCNCMC require system-dependent chemical potential calibration; 
 GIST and WaterMap characterize existing water distributions but do not directly accelerate sampling during alchemical transformations; 
 and most molecular dynamics engines lack native implementations of these techniques~\cite{Samways2020,Cezar2020,Nejahi2021,Nejahi2019}. 
 These barriers have limited routine adoption despite demonstrated effectiveness, 
@@ -349,23 +351,17 @@ and (3) extending validation to ABFE calculations.
 %All calculations utilized identical benchmark systems, transformations, and experimental data as Ross et al. for rigorous comparison.
 For direct comparison with GCMC, we utilized identical protein systems, alchemical transformation edges, and experimental reference data as Ross et al~\cite{ross2020enhancing}. \\
 \newline
-%For a robust validation of the Swap Monte Carlo method, 
-%we conducted a series of tests to evaluate its performance in free energy calculations.
-%Gregory et.al~\cite{ross2020enhancing} performed a comprehensive evaluation of the GCMC method for water sampling in the RBFE calculations.
-%The test set in Gregory's work includes 94 ligands in 8 diverse protein-ligand systems.
-%For each system, the transformation of the ligands in RBFE calculations is related to the water displacement in the protein cavity.
-%GCMC has been shown to be effective in sampling water molecules in the protein cavity~\cite{ross2015water},
-%and showed a significant improvement in the accuracy of RBFE calculations compared to the traditional MD simulations for RBFE with water displacement transformation.
-%In this work, we made a direct comparison of the performance of SwapMC with GCMC in the same test cases.
-YE: Add more details about the RBFE and ABFE tests. Such as the mapping, lambda schedule, etc.
+All molecular dynamics simulations were performed using the Uni-FEP framework, built upon OpenMM~\cite{Eastman2023}. 
+Both relative (RBFE) and absolute (ABFE) binding free energy calculations employed identical base simulation conditions: NPT ensemble at 298.15 \textit{K} and 1 bar, with a 4 \textit{fs} timestep.
+The TIP3P~\cite{Jorgensen1983} water model was used throughout, with proteins described by the ff14SB~\cite{Maier2015} force field and ligands parameterized using GAFF2~\cite{he2020fast}, 
+employing AM1-BCC partial charges computed via antechamber. \\
+\newline
+RBFE calculations employed 5~\textit{ns} production simulations per $\lambda$-window, with $\lambda$-spacing dependent on transformation type: 
+24 $\lambda$-windows for charge-change and core-hopping transformations, and 16 $\lambda$-windows for other transformation types. 
+ABFE calculations employed longer production simulations (20~\textit{ns} per $\lambda$-window) to enable thorough equilibration of protein conformational changes during alchemical decoupling, 
+with 32 $\lambda$-windows for neutral ligands and 48 $\lambda$-windows for charged ligands. 
+SwapMC moves were performed every 1000 MD steps (4 ps) in both RBFE and ABFE simulations, with 300 uniformly distributed insertion sites sampled within the spherical cavity region per attempt.
 
-All tests were performed with the Uni-FEP framework.
-RBFE simulations were performed with the Uni-FEP framework, 
-each replica was run for 5~\textit{ns} with a time step of 4~\textit{fs}.
-SwapMC was performed every 1000 steps (4~\textit{ps}) during the simulation.
-300 potential insertion sites were uniformly sampled in the cavity region for each replica.
-TIP3P~\cite{Jorgensen1983} water model was used in all simulations.
-Ligands parameterization was performed with GAFF2~\cite{he2020fast} and ff14SB~\cite{Maier2015} was used for protein force field.
 
 
 \subsection{Water Sampling in Protein Cavity}
@@ -387,15 +383,14 @@ In contrast, SwapMC-enabled simulations rapidly repopulated the cavity,
 achieving near-equilibrium contact water numbers and maintaining stable populations thereafter. \\
 \newline
 The differential water occupancy between ligand endpoints reflects chemical intuition: 
-Ligand 7 accommodates 4.87 $\pm$ 1.57 contact waters compared to 4.18 $\pm$ 1.00 for Ligand 9 from simulations without SwapMC,
+Ligand 7 accommodates 4.87 $\pm$ 1.57 contact waters compared to 4.18 $\pm$ 1.00 for Ligand 9 from simulations without SwapMC.
 While with SwapMC, the number of contact waters are increased obviously (12.79 $\pm$ 1.39 for Ligand 7, 9.0 $\pm$ 2.28 for Ligand 9). 
-the incresement of contact waters is consistent with the transformation of Ligand 9 to Ligand 7 with larger open space in cavity of the protein pocket. 
-Standard MD without enhanced sampling failed to equilibrate this water network, yielding artificially low contact water populations () and consequently systematic underestimation of solvation contributions to binding affinity. \\
+the increment of contact waters is consistent with the transformation of Ligand 9 to Ligand 7 with larger open space in cavity of the protein pocket. 
+Standard MD without enhanced sampling failed to equilibrate this water network, yielding artificially low contact water populations and consequently systematic underestimation of solvation contributions to binding affinity. \\
 \newline
 The improved water sampling directly translated to substantial gains in thermodynamic accuracy. 
 For the Ligand 9~$\to$~7 transformation, SwapMC reduced the error in $\Delta \Delta G$ from 8.171 $\pm$ 0.037 kcal/mol (no SwapMC) to 2.702 $\pm$ 0.036 kcal/mol (with SwapMC) compared to the experimental value of -1.49 kcal/mol. 
 This 4.59 kcal/mol improvement demonstrating that inadequate water sampling was the dominant source of error for this transformation.
-
 
 %For a more intuitive understanding of the water displacement in the protein cavity, 
 %we have selected two ligands from the HSP90 protein-ligand system, Ligand 9 and Ligand 7, as shown in Fig.~\ref{fig:hsp90} A.
@@ -460,14 +455,14 @@ supporting the conclusion that SwapMC provides an effective and practically attr
 
 \begin{table}
   \caption{RBFE results for water sets, where CW denotes Cavity Waters. All edges correspond to those utilized in Gregory's study~\cite{ross2020enhancing}. 
-  The ddG RMSE and $R^2$ values are computed using experimental binding free energies. 
-  The unit of ddG RMSE is \textit{kcal/mol}, with $R^2$ presented in parentheses. 
+  The $\Delta\Delta G$ RMSE and $R^2$ values are computed using experimental binding free energies. 
+  The unit of $\Delta\Delta G$ RMSE is \textit{kcal/mol}, with $R^2$ presented in parentheses. 
   The optimal results are highlighted in \textbf{bold}.}
   \label{tbl:rbfe_watersets}
   \begin{tabular}{l|lllll}
     \hline
     System                    & No CW.     & No CW.        & With CW.    & With CW.     & GCMC by  \\
-    ddG RMSE ($R^2$)          & No SwapMC  & With SwapMC   & No SwapMC   & With SwapMC  & Gregory et al.~\cite{ross2020enhancing} \\
+    $\Delta \Delta G$ RMSE ($R^2$)          & No SwapMC  & With SwapMC   & No SwapMC   & With SwapMC  & Gregory et al.~\cite{ross2020enhancing} \\
     \hline
     Brd4(1)                      & 1.34 (0.67) & 0.87 (0.82) & 1.07 (0.71) & \textbf{0.64 (0.93)} & 1.74 (0.01) \\
     Chk1                         & 2.99 (0.02) & 1.67 (0.43) & 2.64 (0.10) & 1.70 (0.47) & \textbf{0.78 (0.80)} \\
@@ -495,8 +490,8 @@ This diverse set enables assessment of SwapMC utility across a broad range of bi
 All ABFE calculations followed the identical FEP protocol and thermodynamic cycle as described in the Methods section, with SwapMC active throughout both the bound-state and solution-phase decoupling stages. \\
 \newline
 Table~\ref{tbl:abfe_jacs} presents ABFE results across the eight protein targets in the JACS benchmark set. 
-SwapMC demonstrated performance gains for six of eight systems, with six targets showing reduced $\delta G$ RMSE compared to standard MD. 
-The aggregate mean RMSE decreased from 3.69 $\pm$ 2.54 kcal/mol (no SwapMC) to 3.14 $\pm$ 1.54 kcal/mol (with SwapMC), a 0.55 kcal/mol mean reduction. 
+SwapMC demonstrated performance gains for six of eight systems, with six targets showing reduced $\Delta G$ RMSE compared to standard MD. 
+The range of $\Delta G$ RMSE decreased from 1.67 $\sim$ 8.78 kcal/mol (no SwapMC) to 0.77 $\sim$ 4.94 kcal/mol (with SwapMC). 
 However, the magnitude of improvement shows substantial system-dependent variation, with particularly notable gains for systems where cavity water reorganization is the dominant sampling bottleneck. \\
 \newline
 The most substantial improvements occurred for PTP1B (RMSE 8.78 $\to$ 4.94 kcal/mol, 44\% reduction), TYK2 (2.51 $\to$ 1.35 kcal/mol, 46\% reduction), and CDK2 (3.99 $\to$ 2.04 kcal/mol, 49\% reduction), 
