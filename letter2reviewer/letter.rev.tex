@@ -1,0 +1,343 @@
+% Typeset with LaTeX format
+\documentclass[doublespace,prb,aps,preprint]{revtex4}
+%\documentclass[journal=jacsat,manuscript=article]{achemso}
+%\usepackage{pslatex}
+%\usepackage[dvips]{epsfig}
+%\usepackage[dvips]{graphicx}
+\usepackage{graphicx}
+%\usepackage[sf,normalsize]{subfigure}
+\usepackage{subfigure}
+%\bibliographystyle{achemso}
+\usepackage{siunitx}
+\usepackage{multirow}
+\usepackage{hhline}
+\usepackage{chemarr}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage{xspace}
+\usepackage{gensymb}
+\usepackage{chngcntr}
+\usepackage{parskip}
+\counterwithout{table}{section}
+
+\newcommand{\pd}[2]{\frac{\partial {#1}}{\partial {#2}}}
+\newcommand{\rmin}[0]{r_{\rm min}}
+\newcommand{\mb}[1]{\mathbf{#1}}
+\newcommand{\br}[0]{\mathbf{r}}
+\newcommand{\bp}[0]{\mathbf{p}}
+\newcommand{\vap}{\Delta H_{\rm vap}}
+\newcommand{\hyd}{\Delta G_{\rm hyd}}
+\newcommand{\ai}{\emph{ab initio}\xspace}
+\newcommand{\TODO}[1]{\textcolor{red}{#1}}
+\newcommand{\Quote}[1]{\textsl{``#1''}}
+
+\newenvironment{Comment}{ {\bf \indent Reviewer's comment: \\} \setlength{\parindent}{1cm}  \sffamily }{ \ignorespacesafterend \\}
+
+\newenvironment{GeneralComment}{ {\bf \indent General comments: \\} \setlength{\parindent}{1cm}  \sffamily }{ \ignorespacesafterend \\}
+
+
+\newenvironment{Reply}{  {\bf Response: \\}  \setlength{\parindent}{1cm} \normalfont }{ \ignorespacesafterend \vspace{5mm}}
+
+\renewcommand{\baselinestretch}{1.0}
+
+\newcommand{\HJ}[1]{\textcolor{red}{#1}}
+
+\begin{document}
+\noindent
+\textbf{Reviewer \#1} \\
+\begin{GeneralComment}
+The authors developed force field for compounds containing zinc ions on the level of deep potential/molecular mechanics coupling. 
+The carefully searched pdb entries containing zinc ions and they constructed Deep Potential (DP) model by quantum chemical calculations and molecular dynamics simulation. 
+DP was introduced as a correction term that provides additional atomic forces to supplement the molecular mechanics forces for a set of atoms. 
+Computational work was carefully performed, and the manuscript is clearly written. 
+I would like to emphasize that the topic is far from being trivial and several readers may have problems reading it. 
+The manuscript however represents an important new contribution and should be published.
+\end{GeneralComment}
+\begin{Reply}
+We would like to thank the reviewer for his or her careful reading and favorable comments.
+\end{Reply}
+
+\begin{Comment}
+1. Imagine that I have my own simulation package for molecular dynamics. 
+In what form I will introduce proposed DP for zinc (functional form, number of terms…)? 
+How the authors imagine DP force fields in the popular simulation packages e.g. GROMACS or AMBER in the future? An additional scheme would help.
+\end{Comment}
+\begin{Reply}
+    Thank you for this comment. The trained DP model is provided as a TensorFlow .pb file, which can be unpacked by the DeePMD-kit library. Therefore, as long as a simulation package can provide an interface that feeds particle coordinates into the C/C++ interface of DeePMD-kit and read the output forces, the model can be readily utilized. We have added the following text to outline the requirements for using DP force fields in popular simulation packages.  \\
+    \newline
+    (Page 17) \\
+    \Quote{ This facilitates the employment of DP/MM in existing MD simulation software. While in this work we developed an interface between OpenMM and the DeePMD-kit library, similar implementation can be performed with AMBER~\cite{case2023amber} or GROMACS~\cite{abraham2015gromacs} that feeds particle coordinates into DeePMD-kit to obtain the inferred corrections to MM forces. In addition, an adaptive selection algorithm is needed to dynamically define the DP region throughout the simulation. }    
+\end{Reply}
+
+\begin{Comment}
+2. Somebody would like to construct DP for copper that is placed at the active enzyme center.
+e.g. diamino oxidase ACS Omega 2018, 3, 4, 3665–3674
+Would be enough to consider just this active center or more complexes with copper should be involved?
+\end{Comment}
+\begin{Reply}
+Thank you for such a valuable comment. We have incorporated the following discussions into the ``Conclusions and Discussion'' section. \\     
+    \newline
+    (Page 17) \\
+    \Quote{
+        It is worth emphasizing that the transferability of the DP model is primarily constrained by the diversity of its training dataset. 
+        Broadening the inclusion of diverse complexes and employing more efficient sampling in the conformation space within the DP-region of metalloproteins would be crucial for enhancing the generalization capability of DP/MM for transition metal centers such as copper~\cite{maršavelski2018empirical}. 
+        Therefore, the integration of more robust MLP training schemes, such as active learning~\cite{zhang2020dp} or the use of pre-trained large models~\cite{zhang2022dpa}, 
+        could further enhance DP/MM's ability to generalize to more complex coordination situations.
+    }
+\end{Reply}
+
+\begin{Comment}
+3. In the empirical valence bond (EVB) approach to enzymology there are a couple of transferable parameters for describing Born Oppenheimer surface and catalytic effect comes out automatically.
+See:
+A. Warshel, Computer Modelling of Chemical Reactions in Enzymes and Solutions, John Wiley and Sons, 1991, New York
+J. Mol. Biol. (1976) 103, 227-249
+J. Chem. Theory Comput. 2023, 19, 6037−6045
+Can the authors compare DP with EVB? 
+Will DP replace one day QM/MM approaches?
+In any event it would be a major challenge to apply DP to carbonic anhydrase. See reference 37.
+Quote, comment!
+\end{Comment}
+\begin{Reply}
+    Thank you for raising this point. The EVB method and the DP model share a notable commonality in that neither includes explicit electronic degrees of freedom, which significantly simplifies many of the challenges associated with QM/MM calculations. Since its proposal, EVB has inspired a lot of methodology development. We have incorporated additional text in both the Introduction and Discussion sections. In particular, we have pointed out that our current model is not able to handle the proton transfer reaction investigated using EVB in Ref. 37~\cite{aaqvist1992computer} as presented in the original manuscript. \\
+    %\HJ{I left this paragraph for you to remove as this is a typical example of responses that kill oneself. The reviewer raised up the question of EVB, so he or she definitely doesn't want to learn from you what EVB is. } \\
+    \newline
+    (Page 4) \\
+    \Quote{
+        Another way to model chemical reactions with MD simulations is the empirical valence bond (EVB) method~\cite{warshel1976theoretical, warshel1991computer, oanca2023efficient}, which couples two MM potential energy surfaces (PESs) using several tunable coupling parameters. 
+    } \\
+    %\HJ{put it in the Introduction, right before `Adaptive partitioning QM/MM schemes are still in development'} \\
+    (Page 16) \\
+    \Quote{
+        We note that the current DP/MM scheme is not able to handle chemical reactions, as it employs MM to model the entire system, including both bonded and non-bonded interaction terms. As a result, it cannot be used for studying the catalytic mechanisms of zinc-containing enzymes, such as the proton transfer reactions in carbonic anhydrase I~\cite{aaqvist1992computer}. 
+    }
+\end{Reply}
+
+\begin{Comment}
+4. When constructing DP it is probably essential to include polarizability.
+Gas phase water molecule has dipole moment of 1.84D, while the bulk phase value is 2.4D.
+Polarizability allows for potential transferability. See for example:
+J. Chem. Phys. 103 (1995) 2272-2285
+Quote, comment!
+\end{Comment}
+\begin{Reply}
+    Thank you for the comment. We have added the following discussions: \\
+    \newline
+    (Page 19) \\
+    \Quote{
+        Including polarizability has been a promising direction to enhance the accuracy and transferability of FF models~\cite{jordan1995towards, ponder2010current, lemkul2016empirical, 17mpid}. 
+        Several efforts have already been made to integrate polarizable FFs with machine learning potentials~\cite{inizan2023scalable, wang2023incorporating}, and using polarizable FFs as the MM part of the DP/MM framework will be pursued in our future research.
+    }
+\end{Reply}
+
+\begin{Comment}
+5. In the pdb experimental Zn-X distances are probably not more accurate than 0.2A
+Comment!
+\end{Comment}
+\begin{Reply}
+    Thank you for pointing out this. We have updated the manuscript to better reflect this issue as follows: \\
+    \newline
+    (Page 7) \\
+    \Quote{
+        We note that the measurements from crystal structures can be influenced by factors such as crystallization conditions,  model building and refinement protocols, and resolutions. These factors comprise the accuracy of distance measurements obtained from PDB structures. 
+       } 
+       %\HJ{put this after "The fluctuation of these ... also slightly reduced. "}
+\end{Reply}
+
+\begin{Comment}
+6. Equation 4: several readers will have problems to understand it. 
+I would add some additional sentences or a scheme.
+Comment!
+\end{Comment}
+\begin{Reply}
+    Thank you for the comment.
+    We have made the following changes to the manuscript to ease the understanding of the Equation 4: \\
+    \newline
+    (Page 23) \\
+    \Quote{
+        , where $i$ represents the index of a structure within the training batch, and $n_i$ denotes the number of atoms in this particular structure. 
+$\mathbf{F}^{\text{QM}}_{ij}$, $- \frac{\partial U_i^{\text{MM}}(\{ \mathbf{R}\})}{\partial \mathbf{r}_{j}}$, 
+        $\mathbf{F}^{\text{DP}}_{ij}$ are the QM, MM, and DP calculated forces for the $j$-th atom in the $i$-th structure, respectively. 
+        Exclusion was implemented via the atom force pre-factor $m_{ij}$, which was set to 1 if the atomic forces for $j$-th atom were included in the training and 0 if not. 
+        Essentially, the numerator term in Eq.~4 is a summation of squared differences between the QM and (MM + DP) forces for the atoms of interest.
+        The term $\sum^{n_i}_j m_{ij}$ in the denominator, which counts the number of atoms in the $i$-th structure included in the training, acts as a normalization factor in the loss function. 
+Forces exerted on the hydrogen atoms were excluded from the loss function to avoid bias arising from their inherent fluctuations. 
+    } 
+    %\HJ{put all these after the Equation 4, not before. This is the common practice of scientific papers. Put Equation 4 right below ``in the side chains of residues.'' I also made some changes to the equation as you can see from the above text. Please adopt to the main text.}
+\end{Reply}
+
+\begin{Comment}
+7. Experimental free energy of hydration of Zn2+ is very hard to be reproduced computationally.
+Lawrence Pratt and coworkers report a value of -458kcal/mol :JACS 2004 (126) 1285, that probably involves also some water chemistry.
+It would be a major challenge to reproduce this number by using DP.
+Quote, comment!
+\end{Comment}
+\begin{Reply}
+    Thank you for your helpful comment. We have incorporated the following sentences into the Discussion section: \\
+    \newline
+    (Page 18) \\
+    \Quote{
+ One challenging thermodynamic observable for the DP/MM model to reproduce would be the hydration free energy of the zinc ion~\cite{asthagiri2004hydration}, which involves complicated water chemistry. 
+    } 
+\end{Reply}
+        
+\begin{Comment}
+8. check references 88,89,90
+\end{Comment}
+\begin{Reply}
+Thank you for pointing out this. We have fixed them.
+\end{Reply}
+
+
+\vspace{5mm}
+
+\bigskip
+\bigskip
+\bigskip
+
+\textbf{Reviewer \#2} \\
+\begin{GeneralComment}
+The paper by Ding and Huang is a useful practical advance in the set of computational tools and models used to study Zn-protein interactions for a wide range of applications.
+There are several aspects of the approach, however, that are of considerable concern in the sense that the model seems to be a force-only correction, 
+and there is not validation demonstrations for thermodynamic quantities (e.g., relative ligand binding free energies or potential of mean force profiles). 
+In addition, there some parts of the discussion that should undergo revision before publication can be recommended.
+\end{GeneralComment}
+
+\begin{Reply}
+We would like to thank the reviewer for his or her careful reading and positive comments. 
+\end{Reply}
+
+
+\begin{Comment}
+1.  If I am interpreting correctly, on page 19-20, the authors only apply the atomic forces to the DP regions and discard the forces of the rest atoms and the total potential energy.  
+If this is the case, then this would be a violation of Newton's third law as the total forces may not be zero, making the approach seem unphysical. 
+If this is not the case, the description should be clarified.\\
+2. On page 17, the authors also mention that “there is no trivial way to obtain the potential energy from the DP model”. 
+The approach taken by the authors may be revised to get the potential energy as follows: 
+(1) In Eq. 1, sum atomic energies only for DP regions as the potential energy, but still consider atoms outside the DP regions for neighbor j, so the neighbor atoms of DP regions can also contribute to the total energy; 
+(2) calculate the negative gradients of the computed potential energy as the atomic forces, not only for the DP regions but also for their neighbor atoms. 
+A similar approach has been commonly used to run simulations across multiple processors and nodes, 
+where different processors compute different regions. 
+Such a revised approach, if I am interpreting correctly what the authors describe, would more physical and the potential energy can be exported.  
+The authors should consider and discuss this.
+\end{Comment}
+\begin{Reply}
+    Thank you for these valuable suggestions. You are indeed correct on both points. We have added the following clarifications and discussions in the Methods and the Discussion sections. \\
+    \newline
+    (Page 18) \\
+    \Quote{ 
+    As only the interior particles of the DP region are subject to the added atomic forces, the conservation of momentum is violated,  and there is no trivial way to obtain the potential energy from the DP model. 
+    Consequently, we are not able to perform free energy calculations or examine the thermodynamic properties using DP/MM. 
+    These aspects have been extensively discussed in previous studies utilizing MLP/MM models~\cite{giese2022combined}. 
+    One possible way to obtain the potential energy could involve summing the atomic energies of the interior particles of the DP region and then calculating the negative gradients of this computed potential energy 
+    as the atomic forces for both atoms in the DP region and neighboring atoms through the chain rule. 
+    However, this implies that neighboring atoms would experience an additional correction force that diverges the overall forces from MM ones, a factor that should be accounted for during model training. 
+    Additionally, constraints should be carefully applied to neighboring hydrogen atoms as the DP correction forces on these atoms could strongly fluctuate.  
+    Further exploration in this direction will be pursued in subsequent investigations.
+    }    \\
+    (Page 21) \\
+    \Quote{
+        This violates the conservation of momentum such that thermostats are required for MD simulations. Consequently, the energy prediction provided by the DP model is also ignored during the inference.
+    }    
+    %\HJ{after ``backbone of each coordinated residue are discarded.''}
+\end{Reply}
+
+\begin{Comment}
+3. With regard to model validation, it seems to me the most vital quantity to include are the free energy values associated with binding and exchange (rate) of ligands, 
+but this appears to be absent from the paper.  
+Even with just forces, one could compute potential of mean force profiles, e.g., as in J. Chem. Theory Comput. (2022) 18, 4304-4317.  
+In the current version, the analysis seems to be quite structure based, which limits the range of application. 
+If the goal is only to produce geometries and coordination numbers, then this should be better reflected in the title and abstract.
+\end{Comment}
+\begin{Reply}
+    Thank you for pointing this out. We have modified the abstract to reflect this limitation.  \\
+    \newline
+    (Page 1) \\
+    \Quote{
+        Simulations on a variety of zinc-containing proteins demonstrate that DP/MM faithfully reproduces the structural characteristics of zinc coordination, 
+        for example, the tetrahedral coordination structures for the $Cys_4$ and the $Cys_3His_1$ groups. 
+    } \\
+    (Page 1) \\
+    \Quote{
+        DP/MM not only serves as a valuable tool for studying the structures and dynamics of zinc-containing proteins but also represents a pioneering approach that augments the growing landscape of machine learning potentials in molecular modeling.
+    }
+
+%%%%%%%%%%%
+%% Ye to Jing: I don't want to add more sentences to the manuscript to address this comment.
+%% Since the abstract did reflect the goal of our work.
+%%``Simulations on a variety of zinc-containing proteins demonstrate that DP/MM faithfully reproduces their coordination geometry and structural characteristics, 
+%% for example, the tetrahedral coordination structures for the $Cys_4$ and the $Cys_3His_1$ groups.''
+%%%%%%%%%%% 
+%\HJ{please make sure you re-set the modification in the main text.}
+\end{Reply}
+
+\begin{Comment}
+4. In the discussion of MM models for ions, and in particular the Li and Merz work, 
+it should be pointed out that while these models work well for ions in homogeneous environments [J. Comput. Chem. (2015) 36, 970-982], 
+they need to be specifically tuned (i.e., their pairwise parameters changed) when used in heterogeneous environments so as to have balanced interactions with new ligand environments [J. Phys. Chem. B (2015) 119, 15460-15460].  
+Taken together, this bolsters the author’s case for needing to develop more robust, 
+predictive models for Zn ions as they have worked toward n the present study.
+\end{Comment}
+\begin{Reply}
+    Thank you very much for the comment. 
+    We have added the following sentence to the manuscript.  \\
+    \newline
+    (Page 3) \\
+    \Quote{
+        While these models perform well for ions in homogeneous environments~\cite{panteva2015comparison}, 
+        their parameters often require specific tuning when used in heterogeneous environments to achieve balanced interactions with novel ligand environments~\cite{panteva2015force}. 
+    } 
+    %\HJ{Put it directly in the Introduction, after ``implicitly describe the polarization and charge transfer effects in zinc-protein interactions.''}
+    %(Page .....) \\
+    %\Quote{
+    %    It is worth mentioning that molecular mechanics (MM) simulations employing bonded force fields can effectively preserve the correct coordination geometry 
+    %    for zinc-protein interactions throughout molecular dynamics (MD) simulations, 
+    %    as demonstrated in previous studies~\cite{li2017metal, yu2018extended, peters2010structural}. 
+    %    Nonetheless, this restraint-based approach relies on a prior understanding of the coordination geometry, 
+    %    which may not always be readily available. 
+    %    Furthermore, while these models exhibit satisfactory performance when utilized in homogeneous environments for ions~\cite{panteva2015comparison}, 
+    %    they necessitate careful tuning when employed in heterogeneous environments to 
+    %    maintain balanced interactions with novel ligand environments~\cite{panteva2015force}.
+    %    Our approach offers a flexible and physically reasonable alternative to achieve this objective.
+    %} 
+    %\HJ{I don't want you to change original sentences, in particular the first one indicates these are from a machine not you. Please remove all these and reset the original ones in this part. Thanks.}
+\end{Reply}
+
+\begin{Comment}
+5. In Eq.2, it’s unclear what $d_2$ is.
+\end{Comment}
+\begin{Reply}
+    Thank you for pointing this out.
+    $d_2$ is an integer that controls the truncation of the embedding vector for the atomic environment.
+    A larger $d_2$ represents a larger embedding vector, which contains more information about the atomic environment,
+    but this also increases computational costs.
+    In our study, we found that $d_2 = 16$ adequately captures the atomic environment of the zinc ion while maintaining computational efficiency. 
+    Details on the function of $d_2$ are illustrated in Fig.~S6 in the Supporting Information.    
+    We have also revised the manuscript to provide a more detailed description of the atomic environment vectors: \\
+    \newline
+    (Page 19) \\
+    \Quote{
+        The system's potential energy in the DP model is expressed as the sum of individual atomic energies (Eq.~1).
+        Specifically, a neural network $NN_{\text{fitting}}$ takes as input the atomic environment vectors $\mathcal{D}_{i}$ to output the atomic energy $E_i$. 
+        The $\mathcal{D}_{i}$ vectors, in turn, are derived from a rotation-invariant embedding network $NN_{\text{embedding}}$ using the relative displacement vectors $\mathbf{\tilde{R}}^{i}$ between the $i$-th atom and its neighboring $j$-th atom (Eq.~2).
+        The embedding vector output is controlled by the integer parameter $d_2$, which determines the truncation of the embedding vector and thus effectively reduces the dimensionality of the environment vectors $\mathcal{D}_{i}$.
+        The fitting networks are distinguished by the element type of the central atom $i$, 
+        while variations in the embedding networks arise based on the atom pair type between the central atom $i$ and its neighbor $j$. 
+    } \\
+    (Page 24) \\
+    \Quote{
+        $d_2$ is set to 16. The implementation details of this concise DP architecture are provided in Fig.~S6 in the Supporting Information, and this extension has already been integrated into the most recent version of DeePMD-kit~\cite{zeng2023deepmd}. 
+    } 
+    %\HJ{put it after ``pre-factors to 0.''}
+\end{Reply}
+
+\begin{Comment}
+6. Refs 88-90 are broken and need to be fixed.
+\end{Comment}
+\begin{Reply}
+Thank you for pointing out this. We have fixed them.
+\end{Reply}
+
+
+\bibliography{ref,myrefs}
+\bibliographystyle{chicago}
+\end{document}
