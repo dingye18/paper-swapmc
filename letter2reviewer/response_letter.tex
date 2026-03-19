@@ -1,0 +1,268 @@
+
+
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{lipsum} % to generate some filler text
+\usepackage{fullpage}
+\usepackage{mathrsfs}
+\usepackage{svg}
+\usepackage{xr}
+\usepackage{amsthm,cite,url,graphicx,booktabs,lipsum,color,bm,caption,subcaption,soul}
+\usepackage{pifont,tikz,paralist,multirow,amssymb}
+\usepackage{xifthen}
+\usepackage{enumerate}
+\usepackage{titlesec}
+\newcounter{reviewer}
+\setcounter{reviewer}{0}
+\newcounter{point}[reviewer]
+\setcounter{point}{0}
+
+% This refines the format of how the reviewer/point reference will appear.
+%\renewcommand{\thepoint}{C\,\thereviewer.\arabic{point}}
+
+\renewcommand{\thepoint}{Comment\,\thereviewer.\arabic{point}}
+
+% command declarations for reviewer points and our responses
+
+\newenvironment{point1}
+   {\refstepcounter{point} \bigskip \noindent {\textbf{Associate Editor Comment~}} ---\ }
+   {\par }
+
+\newcommand{\reviewersection}{\stepcounter{reviewer} \bigskip \hrule
+                  \section*{Reviewer \thereviewer}}
+
+% \newenvironment{point}
+
+%    {\refstepcounter{point} \bigskip \noindent {\textbf{Reviewer~\thepoint} } ---\ }
+%    {\par }
+
+\newenvironment{point}
+   {\refstepcounter{point} \bigskip \noindent {\textbf{Reviewer~\thepoint} } ---\ }
+   {\par }
+
+
+\newcommand{\shortpoint}[1]{\refstepcounter{point}   \bigskip \noindent 
+	{\textbf{Reviewer~Point~\thepoint} } ---~#1  }
+
+\newenvironment{reply}
+   {\medskip \noindent \color{blue} \begin{sf}\textbf{Reply}:\  }
+   {\medskip \par \end{sf}}
+
+\newcommand{\shortreply}[2][]{\medskip \noindent \begin{sf}\textbf{Reply}:\  #2
+	\ifthenelse{\equal{#1}{}}{}{ \hfill \footnotesize (#1)}%
+	\medskip \end{sf}}
+
+\makeatletter
+\newcommand*{\addFileDependency}[1]{% argument=file name and extension
+  \typeout{(#1)}
+  \@addtofilelist{#1}
+  \IfFileExists{#1}{}{\typeout{No file #1.}}
+}
+\makeatother
+
+\newcommand*{\myexternaldocument}[1]{%
+    \externaldocument{#1}%
+    \addFileDependency{#1.tex}%
+    \addFileDependency{#1.aux}%
+}
+
+\myexternaldocument{main}
+%\externaldocument[I-]{main}
+
+
+\def\thesubsubsection{\arabic{subsubsection}}
+\titleformat{\subsubsection}[runin]
+{\normalfont\bfseries}
+{\indent\thesubsubsection)}{0.5em}{}
+
+
+\begin{document}
+\section*{Notes on revision made to manuscript Paper $\#$ct-2026-001787: \\ Improving binding free energy predictions with Swap Monte Carlo for water sampling 
+}
+\vspace{10pt}
+
+The authors would like to thank the editor and reviewers for their constructive comments and suggestions that have helped improve the quality of this manuscript. The manuscript has undergone a thorough revision according to the editor and reviewers’ comments. Please see below our responses. For the reviewers’ convenience, we have highlighted significant changes in the revised manuscript in \textcolor{blue}{blue}.
+
+% Let's start point-by-point with Reviewer 1
+
+
+%\section*{Response to the Associate Editor}
+% General intro text goes here
+%\begin{point1}
+%For your work, I have received three independent review reports from experts 
+%\end{point1}
+
+
+%\begin{reply}
+%Thank you so much for your constructive comments. 
+
+%\end{reply}
+
+\section*{Response to the reviewers}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\reviewersection
+This is an interesting MC study on water sampling in the context of MD simulations/free energy calculations, 
+and I believe it will be of significant interest to workers in the area. 
+However, there are several aspects I would recommend improving.
+% Point one description 
+
+%%%%%%%%%%%%%%%%
+\begin{point}
+Some critical details are missing in methods; in general, the authors should provide enough detail someone should reproduce the work (e.g. give exact lambda spacing, form and parameters of soft core potentials, etc.). 
+One specific thing I noticed is that it is unclear if the free energy calculations involve independent lambda values or are HREX simulations. 
+This has major implications for understanding their results, so it is critical to explain.\label{comment_11}
+\end{point}
+
+% Our reply
+\begin{reply}
+	TBD
+\end{reply}
+
+\begin{point}
+Clearly, water swap MC can achieve at least two things: (a) better equilibration of waters, and (b) better sampling of water states. 
+Here, in most experiments, both are mixed together -- particularly, results are looking at improved water sampling IN free energy calculations. 
+How much of the present gains could have been achieved simply by better equilibration? 
+e.g. with simulations at independent lambda values, 
+one could use water swap MC only during the equilibration phase to better equilibrate the water, 
+then turn it off during the free energy calculations. 
+How much would that have improved results and what would be the relative cost/benefit? 
+(Even Schrodinger's work on GCMC relative free energy calculations, 
+if read very carefully, highlights that most of the benefit from their GCMC algorithm actually comes from better equilbiration.)\label{comment_12}
+\end{point}
+
+% Our reply
+\begin{reply}
+	TBD
+\end{reply}
+
+
+\begin{point}
+What about in systems where a binding site region partially collapses when water is absent? 
+e.g. in Reference 34 a key finding is that in some cases, binding sites collapse and are hard to refill with water once a water is removed. 
+Presumably, this approach would have a hard time dealing with such cases 
+(as did the work in reference 34, but it might be even worse here); this should be addressed.\label{comment_13}
+\end{point}
+
+% Our reply
+\begin{reply}
+	TBD
+\end{reply}
+
+\begin{point}
+It should be disclosed whether/where this code is available, if at all. 
+It may be that this is only available in a commercial package (is Uni-FEP commercial?) and if so this should be stated. 
+(And if that's the case, then the authors should give much more detail to allow reproduction of the work, 
+see point 1 above, otherwise this would essentially just be a software advertisement.)\label{comment_14}
+\end{point}
+
+% Our reply
+\begin{reply}
+	TBD
+\end{reply}
+
+\begin{point}
+Probably also cite OpenFF in connection with recent developments on force fields; in comparison with CGenFF and GAFF2, OpenFF has been more active in recent years. \label{comment_15}
+\end{point}
+
+% Our reply
+\begin{reply}
+	TBD
+\end{reply}
+
+\begin{point}
+It would be helpful to try and make the paper at least reasonably self-contained for those from outside the area, 
+e.g. by adding single-sentence explanations when relevant. 
+Concrete example: p11 line 11, "the Gumbel-Max Trick" is explained in terms of "Gumbel noise" which is unhelpful to me since I know neither the trick nor what Gumbel noise is. \label{comment_16}
+\end{point}
+
+% Our reply
+\begin{reply}
+	TBD
+\end{reply}
+
+\begin{point}
+Concerning efficient evaluations of move proposals, 
+could further optimizations be possible by pre-filtering candidate sites for obvious steric clashes (which would eliminate the need to do a full energy evaluation)? 
+Or are the energy evaluations so efficient that this wouldn't provide further gains? 
+(It would be good to briefly mention this in the paper.) \label{comment_17}
+\end{point}
+
+% Our reply
+\begin{reply}
+	TBD
+\end{reply}
+
+\begin{point}
+page 18 line 24 and vicinity: Lack of improvement in some cases is blamed on force field accuracy, protein conformational sampling. Probably other example issues should also be listed and it should be made more clear that this is just a set of examples; for example, the benchmarking work of Hahn et al. has highlighted that in many cases, ligand pose quality and system prep (selection of protonation states etc.) are a dominant source of error, and these factors aren't even mentioned here. \label{comment_18}
+\end{point}
+
+% Our reply
+\begin{reply}
+	TBD
+\end{reply}
+
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\reviewersection
+The authors reported an MC method for sampling water molecules in buried pockets 
+that appears to help the convergence of free energy calculations for such systems. 
+The topic is of interest to the readership of JCTC and results are interesting. 
+The authors need to address the following few comments before the paper can be published:
+
+%%%%%%%%%%%%%%%%
+\begin{point}
+While the formulas appear correct for the MC water swap, 
+the parallel evaluations of multiple MC moves might break the detailed balance condition. 
+In particular, after all the potential insertion conformations are sequentially evaluated, 
+"the first conformation to satisfy the Metropolis criterion (random number < ASi→Sj ) is accepted, and the iteration proceeds to Step 5." 
+Is there a particular fixed sequence about the different positions and orientations of the candidate water configuration for insertion? 
+Or is it random as well? 
+What does 'first' here mean? "first" in calculation order that satisfies the MC acceptance or 'first' in the predetermined order? 
+Depending on the implementation details, the detailed balance condition may break. \label{comment_21}
+\end{point}
+
+\begin{reply}
+Thank you so much for your constructive comments. 
+\end{reply}
+
+%%%%%%%%%%%%%%%%
+\begin{point}
+The validation on free energy calculation is good, but not quite sufficient. 
+I recommend control simulations on more basic systems to validate the theory and implementation. 
+For example, the authors can perform simulations on ideal gas systems where analytical solutions are available, 
+and a box of water molecules where water exchange is not a problem to compare the simulation results with NPT without MC swap.\label{comment_22}
+\end{point}
+
+\begin{reply}
+ Thank you so much for your constructive comments. 
+\end{reply}
+
+%%%%%%%%%%%%%%%%
+\begin{point}
+The analysis of AbFEP results needs improvement. 
+Experimental dG has contributions from interaction free energy with the ligand and the apo to holo protein conformational change, 
+with the later missing in short AbFEP simulations. 
+Instead of comparing the raw predicted dG with exp, the authors are encouraged to separate out the systematic shift as compared to exp (related to apo to holo conformational free energy missing for all ligands), 
+and then access the effort of MC swap on both the systematic error and the ranking order error. \label{comment_23}
+\end{point}
+
+\begin{reply}
+Thank you so much for your constructive comments. 
+\end{reply}
+
+%%%%%%%%%%%%%%%%
+\begin{point}
+The raw data for both RbFEP and AbFEP need to be included in the SI.\label{comment_24}
+\end{point}
+
+\begin{reply}
+Thank you so much for your constructive comments. 
+\end{reply}
+
+%\bibliographystyle{IEEEtran}
+%\bibliography{IEEEabrv,mybibfile}
+\end{document}
