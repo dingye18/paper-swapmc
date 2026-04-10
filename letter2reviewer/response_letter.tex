@@ -1,6 +1,4 @@
-
-
-\documentclass[11pt]{article}
+\documentclass[doublespace,prb,aps]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{lipsum} % to generate some filler text
@@ -8,8 +6,9 @@
 \usepackage{mathrsfs}
 \usepackage{svg}
 \usepackage{xr}
-\usepackage{amsthm,cite,url,graphicx,booktabs,lipsum,color,bm,caption,subcaption,soul}
+\usepackage{amsthm,url,graphicx,booktabs,lipsum,color,bm,caption,subcaption,soul}
 \usepackage{pifont,tikz,paralist,multirow,amssymb}
+\usepackage{chemarr,natbib}
 \usepackage{xifthen}
 \usepackage{enumerate}
 \usepackage{titlesec}
@@ -82,6 +81,8 @@
 }
 \vspace{10pt}
 
+\textbf{Rewrite this section to be more specific to the paper and the comments received.}
+
 The authors would like to thank the editor and reviewers for their constructive comments and suggestions that have helped improve the quality of this manuscript. The manuscript has undergone a thorough revision according to the editor and reviewers’ comments. Please see below our responses. For the reviewers’ convenience, we have highlighted significant changes in the revised manuscript in \textcolor{blue}{blue}.
 
 % Let's start point-by-point with Reviewer 1
@@ -118,7 +119,9 @@ This has major implications for understanding their results, so it is critical t
 
 % Our reply
 \begin{reply}
-	TBD
+	Thanks for pointing this out.
+   We have added more details in the revised manuscript, including the lambda spacing, soft-core potential parameters, and the fact that we are using independent lambda values for our free energy calculations.
+
 \end{reply}
 
 \begin{point}
@@ -133,9 +136,11 @@ How much would that have improved results and what would be the relative cost/be
 if read very carefully, highlights that most of the benefit from their GCMC algorithm actually comes from better equilbiration.)\label{comment_12}
 \end{point}
 
+% Ye: We should do this experiment and report the results.
 % Our reply
 \begin{reply}
 	TBD
+
 \end{reply}
 
 
@@ -160,7 +165,9 @@ see point 1 above, otherwise this would essentially just be a software advertise
 
 % Our reply
 \begin{reply}
-	TBD
+	Thanks for the comment.
+   We have added a statement in the revised manuscript that the code for the water swap MC method is implemented in the Uni-FEP software, which is a commercial package. 
+   We have also provided more details in the methods section to allow for reproduction of the work, as mentioned in our response to comment 1.
 \end{reply}
 
 \begin{point}
@@ -169,7 +176,8 @@ Probably also cite OpenFF in connection with recent developments on force fields
 
 % Our reply
 \begin{reply}
-	TBD
+	Thanks for the suggestion. 
+   We have added the citation for OpenFF papers~\cite{Boothroyd2023} in the revised manuscript when discussing recent developments on force fields.
 \end{reply}
 
 \begin{point}
@@ -263,6 +271,6 @@ The raw data for both RbFEP and AbFEP need to be included in the SI.\label{comme
 Thank you so much for your constructive comments. 
 \end{reply}
 
-%\bibliographystyle{IEEEtran}
-%\bibliography{IEEEabrv,mybibfile}
+\bibliography{ref,common_ref}
+\bibliographystyle{chicago}
 \end{document}
