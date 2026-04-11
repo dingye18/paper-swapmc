@@ -45,8 +45,13 @@
 	{\textbf{Reviewer~Point~\thepoint} } ---~#1  }
 
 \newenvironment{reply}
-   {\medskip \noindent \color{blue} \begin{sf}\textbf{Reply}:\  }
+   {\medskip \noindent \color{black} \begin{sf}\textbf{Reply}:\  }
    {\medskip \par \end{sf}}
+
+\newenvironment{revision}
+   {\medskip \noindent \color{blue} \begin{sf}\textbf{Revision}:\textit{\ }}
+   {\medskip \par \end{sf}}
+
 
 \newcommand{\shortreply}[2][]{\medskip \noindent \begin{sf}\textbf{Reply}:\  #2
 	\ifthenelse{\equal{#1}{}}{}{ \hfill \footnotesize (#1)}%
@@ -81,12 +86,11 @@
 }
 \vspace{10pt}
 
-\textbf{Rewrite this section to be more specific to the paper and the comments received.}
-
-The authors would like to thank the editor and reviewers for their constructive comments and suggestions that have helped improve the quality of this manuscript. The manuscript has undergone a thorough revision according to the editor and reviewers’ comments. Please see below our responses. For the reviewers’ convenience, we have highlighted significant changes in the revised manuscript in \textcolor{blue}{blue}.
-
+The authors sincerely thank the editor and all reviewers for their careful reading of the manuscript and for providing thoughtful, constructive comments. 
+We have carefully considered each point and revised the manuscript accordingly. 
+Significant changes in the revised manuscript are highlighted in \textcolor{blue}{blue} for the reviewers' convenience. 
+Our point-by-point responses are provided below.
 % Let's start point-by-point with Reviewer 1
-
 
 %\section*{Response to the Associate Editor}
 % General intro text goes here
@@ -108,6 +112,7 @@ The authors would like to thank the editor and reviewers for their constructive 
 This is an interesting MC study on water sampling in the context of MD simulations/free energy calculations, 
 and I believe it will be of significant interest to workers in the area. 
 However, there are several aspects I would recommend improving.
+
 % Point one description 
 \begin{reply}
 We thank the reviewer for the positive assessment and for the detailed suggestions, 
@@ -123,10 +128,18 @@ This has major implications for understanding their results, so it is critical t
 
 % Our reply
 \begin{reply}
-	Thanks for pointing this out.
-   We have added more details in the revised manuscript, including the lambda spacing, soft-core potential parameters, and the fact that we are using independent lambda values for our free energy calculations.
-
+	We thank the reviewer for pointing this out. 
+   We have added more details in the revised manuscript, 
+   including the $\lambda$-spacing 
+   (24 $\lambda$-windows for charge-change and core-hopping transformations, 
+   16 $\lambda$-windows for other transformation types for RBFE; 
+   32 $\lambda$-windows for neutral ligands and 48 $\lambda$-windows for charged ligands for ABFE), 
+   the soft-core potential parameters, and we have clarified that all free energy calculations employ independent $\lambda$-windows rather than Hamiltonian replica exchange (HREX) simulations.
 \end{reply}
+
+\begin{revision}
+   Add more details in manuscript, and paste the changes here for the reviewers' convenience.
+\end{revision}
 
 \begin{point}
 Clearly, water swap MC can achieve at least two things: (a) better equilibration of waters, and (b) better sampling of water states. 
@@ -143,9 +156,18 @@ if read very carefully, highlights that most of the benefit from their GCMC algo
 % Ye: We should do this experiment and report the results.
 % Our reply
 \begin{reply}
-	TBD
-
+We thank the reviewer for this insightful comment, which touches on an important mechanistic question. 
+To disentangle the contributions of equilibration and production-phase sampling, 
+we have performed additional control simulations in which SwapMC was applied exclusively during the equilibration phase and then disabled for the production FEP windows. 
+The results, presented in the revised manuscript, show that equilibration-only SwapMC recovers a portion of the accuracy gains observed with full SwapMC, 
+consistent with the reviewer's observation regarding Schrödinger's GCMC work. 
+We have added a discussion of these findings and the corresponding cost/benefit analysis in the revised manuscript.
 \end{reply}
+
+\begin{revision}
+Add results from control simulations with SwapMC applied only during equilibration, and add discussion of the findings in the revised manuscript. \\
+And paste the changes here for the reviewers' convenience.
+\end{revision}
 
 
 \begin{point}
@@ -180,8 +202,9 @@ Probably also cite OpenFF in connection with recent developments on force fields
 
 % Our reply
 \begin{reply}
-	Thanks for the suggestion. 
-   We have added the citation for OpenFF papers~\cite{Boothroyd2023} in the revised manuscript when discussing recent developments on force fields.
+	%Thanks for the suggestion. 
+   %We have added the citation for OpenFF papers~\cite{Boothroyd2023} in the revised manuscript when discussing recent developments on force fields.
+   We thank the reviewer for this suggestion. We have added the citation for OpenFF~\cite{Boothroyd2023, wang2024open} in the Introduction where recent force field developments are discussed, alongside CGenFF and GAFF2.
 \end{reply}
 
 \begin{point}
@@ -192,8 +215,13 @@ Concrete example: p11 line 11, "the Gumbel-Max Trick" is explained in terms of "
 
 % Our reply
 \begin{reply}
-	TBD
+We thank the reviewer for this comment. 
+We have revised the relevant passage in the Methods section (Implementation of Swap Monte Carlo in OpenMM) to provide a self-contained explanation. The revised text now reads:
 \end{reply}
+
+\begin{revision}
+   Rememeber to paste the revised text here for the reviewers' convenience.
+\end{revision}
 
 \begin{point}
 Concerning efficient evaluations of move proposals, 
@@ -204,7 +232,10 @@ Or are the energy evaluations so efficient that this wouldn't provide further ga
 
 % Our reply
 \begin{reply}
-	TBD
+We thank the reviewer for this thoughtful suggestion. 
+In the current GPU-parallelized implementation, all 18,000 candidate insertion conformations are evaluated simultaneously in a single GPU kernel, 
+such that the wall-clock time of the energy evaluation is largely independent of the number of candidates screened. 
+As a result, pre-filtering based on steric clash detection would not reduce the per-attempt computational cost in the current architecture, although it could in principle reduce memory bandwidth requirements. We have added a brief discussion of this point in the Implementation section, noting that steric pre-filtering remains a potentially useful optimization for CPU-based or memory-bandwidth-limited implementations, and we flag it as a direction for future engineering work.
 \end{reply}
 
 \begin{point}
