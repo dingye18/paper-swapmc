@@ -202,8 +202,63 @@ Presumably, this approach would have a hard time dealing with such cases
 
 % Our reply
 \begin{reply}
-	TBD
+We thank the reviewer for raising this important point. 
+To assess whether SwapMC can address pocket collapse scenarios of the type described in Ref.~\cite{Ge2022}, 
+we performed additional simulations on the BPTI system (PDB ID: 5PTI) starting from a structure with the target cavity water removed. 
+With the default swap interval (1000 MD steps, 2 ps), 
+no successful water insertion was observed over 10 ns, 
+indicating that the default settings are insufficient for this highly constrained cavity. 
+However, upon reducing the swap interval to 100 MD steps (0.2 ps), 
+the cavity water was successfully reinserted in all three independent 10 ns simulations, 
+demonstrating that SwapMC can in principle prevent pocket collapse when parameters are appropriately tuned. 
+We have added a dedicated discussion of these results, 
+including the sensitivity to swap interval and the relatively low insertion acceptance rate observed for this system, in the revised manuscript. 
+We acknowledge that further algorithmic refinement may be necessary to handle such challenging cases robustly, 
+and we regard this as an important direction for future development.
 \end{reply}
+
+\begin{revision}
+In addition to improving water sampling during FEP calculations, 
+SwapMC also mitigates the risk of binding site collapse during equilibration when initial structures lack cavity waters. 
+Ge et al.~\cite{Ge2022} reported a pocket collapse event in the BPTI system (PDB ID: 5PTI), 
+in which complete decoupling of a buried water molecule created a transient cavity that induced an inward displacement of the GLY12 backbone oxygen, 
+leading to a collapsed binding site, bimodal work distributions, 
+and poor phase-space overlap in non-equilibrium switching (NES) simulations. \\
+\newline
+To investigate whether SwapMC can prevent such collapse events, 
+we performed 10 ns plain MD simulations of the BPTI system starting from a structure with the target cavity water molecule removed. 
+A 2 $fs$ timestep was employed, with temperature and pressure maintained at 300 K and 1 atm, respectively; 
+force field settings and long-range interaction treatments were consistent with those described in the FEP calculations. 
+With the default SwapMC swap interval of 1000 MD steps (2~$ps$), 
+no successful insertion moves were observed throughout the 10 ns simulation, 
+indicating that the cavity was not rehydrated under standard settings. \\
+\newline
+Upon reducing the swap interval to 100 MD steps (0.2 ps), successful insertion moves were achieved, 
+and the target water molecule was reinserted into the cavity region within 10 ns across all three independent simulations. 
+The minimum distance between the inserted water oxygen and the cavity center 
+— defined as the geometric centroid of the backbone nitrogen atoms of Cys14 and Cys38 and the backbone oxygen atoms of Cys38 and Thr11 
+— was tracked throughout each simulation and is presented in Fig.~\ref{fig:5pti_pocket_collapse}. \\
+\newline
+These results demonstrate that SwapMC can effectively prevent pocket collapse by maintaining cavity hydration during equilibration, 
+provided that the swap interval is appropriately tuned. 
+The failure of the default interval to achieve reinsertion highlights the system-dependence of optimal SwapMC parameters, 
+particularly in cases involving deeply buried, high-barrier cavities. 
+The relatively low acceptance rate for insertion moves in this system further suggests that additional parameter optimization or algorithmic refinements 
+may be warranted to enhance sampling efficiency when pocket collapse presents a significant risk.
+
+\begin{figure}
+  \includegraphics[width=0.9\textwidth]{../figures/5pti_pocket_collapse.png}
+  \caption{
+Pocket collapse prevention in the BPTI system (PDB ID: 5PTI). 
+(Left) Initial structure with the target cavity water molecule highlighted in red, 
+positioned at the geometric centroid of the backbone nitrogen atoms of Cys14 and Cys38 and the backbone oxygen atoms of Cys38 and Thr11. 
+(Right) Minimum distance from water oxygen to the cavity center during three 
+independent 10 ns simulations with SwapMC swap interval of 100 MD steps (0.2 ps).
+  }
+  \label{fig:5pti_pocket_collapse}
+\end{figure}
+
+\end{revision}
 
 \begin{point}
 It should be disclosed whether/where this code is available, if at all. 
