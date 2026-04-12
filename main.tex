@@ -13,6 +13,10 @@
 %% servers.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage[version=3]{mhchem} % Formula subscripts using \ce{}
+\usepackage{xcolor} 
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% If issues arise when submitting your manuscript, you may want to
@@ -27,6 +31,7 @@
 %% when typesetting).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand*\YE[1]{Ye: \texttt{\textbf{#1}}}
+\newcommand*{\textblue}[1]{\textcolor{blue}{#1}}
 
 %%\newcommand{\YE}[1]{\textcolor{blue}{#1}}
 
@@ -150,7 +155,7 @@ Recent benchmarks demonstrate that relative binding free energy (RBFE) calculati
 FEP calculations can be categorized into two types: RBFE calculations where ligands are alchemically transformed between states in the binding site, 
 and absolute binding free energy (ABFE) calculations where ligands are decoupled from the protein cavity. 
 The accuracy of binding free energy calculations depends critically on two factors: force field parameters~\cite{Ding2023, 17c36m, lu2021opls4, he2022recent, vanommeslaeghe2012automationI, vanommeslaeghe2012automationII} and conformational sampling~\cite{15rex, wang2011replica, hritz2008hamiltonian}. 
-Recent advances in force field development, including OPLS4~\cite{lu2021opls4}, CGenFF~\cite{vanommeslaeghe2012automationI, vanommeslaeghe2012automationII}, GAFF2~\cite{he2022recent}, and OpenFF~\cite{wang2024open,Boothroyd2023}, have substantially improved molecular representation accuracy, 
+Recent advances in force field development, including OPLS4~\cite{lu2021opls4}, CGenFF~\cite{vanommeslaeghe2012automationI, vanommeslaeghe2012automationII}, GAFF2~\cite{he2022recent}, \textblue{and OpenFF~\cite{wang2024open,Boothroyd2023}}, have substantially improved molecular representation accuracy~\cite{Hahn_2024}, 
 yet inadequate sampling of conformational space—particularly concerning water molecule distributions in binding sites—remains a significant bottleneck limiting FEP reliability and domain of applicability~\cite{ross2020enhancing}. \\
 \newline
 The sampling challenge is particularly acute for water molecules in protein binding sites, 
@@ -222,10 +227,16 @@ The SwapMC algorithm consists of these steps:
   %\item Uniform sampling the potential insertion sites over the destination region.
   \item Parallel energy evaluation. The combination of 300 uniformly sampled insertion sites with 60 water orientations yields 18,000 candidate insertion conformations per swap attempt. 
   Water orientations were sampled using 60 approximately uniformly distributed unit quaternions~\cite{karney2007quaternions}, providing systematic coverage of the rotation group SO(3).
+  \textblue{
+  The 18,000 conformations are re-generated independently for each swap attempt, ensuring the insertion probability $g^{(ins)}_{S_j}$ remains uniform over the destination region as required by Eq.~\ref{eq:transition_probability}.
+  }
   Interaction energies $u_j$ for all candidate conformations are evaluated in parallel on GPUs using our custom OpenMM nonbonded interaction module, enabling efficient exploration of the insertion phase space within milliseconds per swap attempt.
   \item The potential insertion conformations are sequentially evaluated. 
   For each conformation, the acceptance ratio $A_{S_i \to S_j}$ is calculated according to Eq.~\ref{eq:acceptance_ratio}. 
-  The first conformation to satisfy the Metropolis criterion (random number  $< A_{S_i \to S_j}$) is accepted, and the iteration proceeds to Step 5.
+  \textblue{
+  Conformations are evaluated in a fixed order within each attempt, and the first conformation to satisfy the Metropolis criterion (random number  $< A_{S_i \to S_j}$) is accepted.
+  }
+  %The first conformation to satisfy the Metropolis criterion (random number  $< A_{S_i \to S_j}$) is accepted, and the iteration proceeds to Step 5.
   \item Atomic coordinates of the deleted water molecule are updated to match the accepted conformation. 
   The velocity vector of this water molecule is reset to zero to maintain numerical stability in the subsequent MD steps.
 \end{enumerate}
@@ -319,16 +330,30 @@ We rewrote OpenMM's nonbonded interaction module to compute per-water interactio
 evaluating all water molecules in simulation system across GPU threads simultaneously. 
 A critical optimization leverages OpenMM's native neighbor list infrastructure, which is automatically maintained during MD simulation. 
 Rather than recomputing pair distances, SwapMC inherits this precomputed neighbor list, reducing energy evaluation cost for water-protein interactions by restricting calculations to relevant atoms instead of the full system. 
-Long-range electrostatics in interaction energies are computed using the Reaction-Field method ($\epsilon = 80$) to approximate PME interactions while enabling fully GPU-local computation without global FFT operations. \\
+Long-range electrostatics in interaction energies are computed using the Reaction-Field method ($\epsilon = 80$) to approximate Particle Mesh Ewald (PME)~\cite{petersen1995accuracy} interactions while enabling fully GPU-local computation without global FFT operations. \\
 \newline 
-Water molecule selection from the source region employs the Gumbel-Max Trick for GPU compatibility~\cite{huijben2022review}. 
-This method enables direct parallel sampling by computing log-probabilities and Gumbel noise independently for each water molecule, 
-then selecting via parallel max-reduction in $O(\log N_{\text{src}})$ time. 
-This approach avoids the serial bottleneck of computing cumulative probabilities and sorting, which would severely limit GPU utilization, 
-while remaining theoretically equivalent to rejection-free sampling from the categorical distribution defined by the biased selection probabilities. \\
+Water molecule selection from the source region employs the Gumbel-Max Trick for GPU compatibility~\cite{gumbel1954statistical,huijben2022review}.
+\textblue{
+This technique is a standard result from discrete probability theory: 
+by adding independent Gumbel-distributed noise (a specific extreme-value distribution) to the log-probabilities of each candidate, 
+and selecting the candidate with the maximum perturbed value,
+one obtains an exact sample from the original categorical distribution.
+Crucially, the argmax operation is parallelizable in $O(\log N_{\text{src}})$ time on GPUs, 
+avoiding the serial bottleneck of computing cumulative distribution functions and performing sequential rejection sampling.
+}
+%This method enables direct parallel sampling by computing log-probabilities and Gumbel noise independently for each water molecule, 
+%then selecting via parallel max-reduction in $O(\log N_{\text{src}})$ time. 
+%This approach avoids the serial bottleneck of computing cumulative probabilities and sorting, which would severely limit GPU utilization, 
+%while remaining theoretically equivalent to rejection-free sampling from the categorical distribution defined by the biased selection probabilities. \\
 \newline
 Following water selection, the method evaluates 18,000 candidate insertion conformations in parallel using the optimized nonbonded module. 
 Each GPU thread computes the interaction energy $u_j$ for one candidate conformation, with data cached in GPU shared memory for efficiency.
+\textblue{
+Note that pre-filtering candidates by steric clashes prior to energy evaluation would complicate the detailed balance condition, 
+as the effective insertion probability $g^{int}_{S_j}$ would no longer be uniform over the destination region; 
+moreover, since all conformations are evaluated within a single GPU kernel that executes parallel energy evaluations for all candidates, 
+such pre-filtering would provide no practical performance benefit.
+}
 The first conformation satisfying the Metropolis criterion is immediately accepted, terminating the screening loop for that swap attempt.
 This sequential-acceptance strategy maintains detailed balance while ensuring computational efficiency, 
 as finding one acceptable candidate quickly is more efficient than exhaustively scoring all 18,000 candidates. \\
@@ -359,9 +384,24 @@ employing AM1-BCC partial charges computed via antechamber. \\
 RBFE calculations employed 5~\textit{ns} production simulations per $\lambda$-window, with $\lambda$-spacing dependent on transformation type: 
 24 $\lambda$-windows for charge-change and core-hopping transformations, and 16 $\lambda$-windows for other transformation types. 
 ABFE calculations employed longer production simulations (20~\textit{ns} per $\lambda$-window) to enable thorough equilibration of protein conformational changes during alchemical decoupling, 
-with 32 $\lambda$-windows for neutral ligands and 48 $\lambda$-windows for charged ligands. 
-SwapMC moves were performed every 1000 MD steps (4 ps) in both RBFE and ABFE simulations, with 300 uniformly distributed insertion sites sampled within the spherical cavity region per attempt.
-
+with 32 $\lambda$-windows for neutral ligands and 48 $\lambda$-windows for charged ligands. \\
+\newline
+\textblue{
+  Detailed $\lambda$ parameters for 16 $\lambda$-windows (RBFE) and 32 $\lambda$-windows (ABFE) are provided in the schedule.json in Supporting Information.
+  The other $\lambda$-windows for RBFE and ABFE calculations were generated by linear interpolation between the specified endpoints, ensuring smooth alchemical pathways.
+  Hamiltonian replica exchange was performed every 250 MD steps (1 ps) to enhance sampling across $\lambda$-windows,
+  REST2 strategy was applied to the alchemically perturbed ligand rotamers to further enhance sampling of ligand conformational space during transformations.
+  The REST2 region is defined as the dummy atoms and the directly connected rotameric groups, 
+  with the maxmium effective temperature of the solute region set to 600 K.
+}
+SwapMC moves were performed every 1000 MD steps (4 ps) in both RBFE and ABFE simulations, with 300 uniformly distributed insertion sites sampled within the spherical cavity region per attempt. \\
+\newline
+\textblue{
+Beutler soft-core potential~\cite{Beutler_1994} were employed for van der Waals interactions to 
+mitigate singularities during decoupling, with standard soft-core parameters ($\alpha_{soft-core}$ = 0.5) to ensure stable sampling across $\lambda$-windows.
+Electrostatic interactions were evaluated using Particle Mesh Ewald (PME) for accurate long-range treatment, with a real-space cutoff of 9~\textit{\AA}.
+Dispersion correction was applied to account for long-range van der Waals interactions beyond the cutoff, ensuring accurate representation of bulk solvent effects on binding thermodynamics.
+}
 
 
 \subsection{Water Sampling in Protein Cavity}
@@ -428,6 +468,13 @@ Using the water-displacement benchmark introduced by Ross et al.~\cite{ross2020e
 we evaluated SwapMC on the same eight protein–ligand systems and 94 ligand transformations to ensure direct comparability. \\
 \newline
 For each system, four RBFE calculation protocols were performed: with and without SwapMC, and with and without inclusion of crystallographic cavity waters (CW) in the initial structures (CW defined as crystallographic waters within 6~$\AA$~of ligand heavy atoms).
+\textblue{
+Besides, to disentangle the contributions of equilibration and production-phase sampling,
+we also performed RBFE calculations where SwapMC was only applied during the equilibration phase,
+with standard MD used for production simulations (Equi. SwapMC Prod. NoSwapMC in Table~\ref{tbl:rbfe_watersets}).
+The input structures for the equilibration-only SwapMC calculations kept the cavity waters, consistent with the "With CW." protocol, 
+to ensure that any observed improvements could be attributed to enhanced sampling during equilibration rather than differences in initial water placement.
+}
 All simulations employed an identical FEP protocol and force field setup, as described in the Methods, to isolate the effect of the sampling strategy. \\
 \newline
 The resulting RBFE statistics are summarized in Table~\ref{tbl:rbfe_watersets}. 
@@ -435,6 +482,12 @@ Incorporation of SwapMC consistently reduced the RMSE with respect to experiment
 demonstrating a marked improvement in thermodynamic accuracy relative to standard FEP. 
 Moreover, RBFE results obtained with SwapMC were largely insensitive to whether crystallographic cavity waters were retained or removed in the initial structures, 
 indicating that SwapMC rapidly equilibrated the cavity hydration state and thus confered robustness with respect to input water placement. 
+\textblue{
+The comparision of results of equilibration-only SwapMC with full SwapMC indicate that the majority of the accuracy improvement arises from enhanced sampling during the equilibration phase,
+which is consistent with the previous GCMC works that emphasized the importance of proper equilibration of cavity waters to accurate RBFE calculations~\cite{ross2020enhancing, ben2021fast}.
+Nevertheless, the additional sampling during production phase with SwapMC provided further incremental improvements in accuracy, 
+suggesting that continued water exchange throughout the simulation can further refine the free energy estimates by ensuring thorough sampling of the hydration landscape as the ligand undergoes alchemical transformation.
+}
 Finally, the accuracy achieved with SwapMC was comparable to that reported for GCMC-based water sampling on the same benchmark set, 
 supporting the conclusion that SwapMC provides an effective and practically attractive alternative to GCMC for treating water sampling in RBFE calculations. \\
 
@@ -459,19 +512,20 @@ supporting the conclusion that SwapMC provides an effective and practically attr
   The unit of $\Delta\Delta G$ RMSE is \textit{kcal/mol}, with $R^2$ presented in parentheses. 
   The optimal results are highlighted in \textbf{bold}.}
   \label{tbl:rbfe_watersets}
-  \begin{tabular}{l|lllll}
+  \scriptsize
+  \begin{tabular}{l|llllll}
     \hline
-    System                    & No CW.     & No CW.        & With CW.    & With CW.     & GCMC by  \\
-    $\Delta \Delta G$ RMSE ($R^2$)          & No SwapMC  & With SwapMC   & No SwapMC   & With SwapMC  & Gregory et al.~\cite{ross2020enhancing} \\
+    System                                  & No CW.     & No CW.        & With CW.    & With CW.     &  Equi. SwapMC      & GCMC by  \\
+    $\Delta \Delta G$ RMSE ($R^2$)          & No SwapMC  & With SwapMC   & No SwapMC   & With SwapMC  &  Prod. NoSwapMC    & Gregory et al.~\cite{ross2020enhancing} \\
     \hline
-    Brd4(1)                      & 1.34 (0.67) & 0.87 (0.82) & 1.07 (0.71) & \textbf{0.64 (0.93)} & 1.74 (0.01) \\
-    Chk1                         & 2.99 (0.02) & 1.67 (0.43) & 2.64 (0.10) & 1.70 (0.47) & \textbf{0.78 (0.80)} \\
-    HSP90\_Kung                  & 3.85 (0.11) & 1.51 (0.59) & 3.90 (0.16) & \textbf{1.50} (0.50) & 2.14 (\textbf{0.62}) \\
-    HSP90\_Woodhead              & 2.27 (0.83) & 0.61 (0.98) & 2.25 (0.84) & 0.65 (0.97) & \textbf{0.26} (\textbf{1.00}) \\
-    Scytalone                    & 2.25 (0.73) & 1.45 (0.84) & 1.90 (0.80) & \textbf{1.39 (0.85)} & 1.86 (0.77) \\
-    Taf1(2)                      & 2.01 (0.08) & 0.70 (0.51) & 0.76 (0.34) & 0.66 (0.51) & \textbf{0.66 (0.78)} \\
-    Thrombin                     & 1.37 (0.34) & 1.14 (0.64) & 1.20 (0.46) & \textbf{1.13 (0.66)} & 1.15 (0.49) \\
-    Urokinase                    & 0.74 (0.62) & 0.91 (0.36) & 0.81 (0.52) & 0.94 (0.32) & \textbf{0.70 (0.74)} \\
+    Brd4(1)                      & 1.34 (0.67) & 0.87 (0.82) & 1.07 (0.71) & \textbf{0.64 (0.93)}     &  0.96 (0.84)       & 1.74 (0.01) \\
+    Chk1                         & 2.99 (0.02) & 1.67 (0.43) & 2.64 (0.10) & 1.70 (0.47)              &  2.00 (0.25)       & \textbf{0.78 (0.80)} \\
+    HSP90\_Kung                  & 3.85 (0.11) & 1.51 (0.59) & 3.90 (0.16) & \textbf{1.50} (0.50)     &  2.16 (0.32)       & 2.14 (\textbf{0.62}) \\
+    HSP90\_Woodhead              & 2.27 (0.83) & 0.61 (0.98) & 2.25 (0.84) & 0.65 (0.97)              &  1.01 (0.89)       & \textbf{0.26} (\textbf{1.00}) \\
+    Scytalone                    & 2.25 (0.73) & 1.45 (0.84) & 1.90 (0.80) & \textbf{1.39 (0.85)}     &  1.23 (0.89)       & 1.86 (0.77) \\
+    Taf1(2)                      & 2.01 (0.08) & 0.70 (0.51) & 0.76 (0.34) & 0.66 (0.51)              &  0.77 (0.48)       & \textbf{0.66 (0.78)} \\
+    Thrombin                     & 1.37 (0.34) & 1.14 (0.64) & 1.20 (0.46) & \textbf{1.13 (0.66)}     &  0.92 (0.63)       & 1.15 (0.49) \\
+    Urokinase                    & 0.74 (0.62) & 0.91 (0.36) & 0.81 (0.52) & 0.94 (0.32)              &  0.87 (0.42)       & \textbf{0.70 (0.74)} \\
     \hline
   \end{tabular}
 \end{table}
@@ -490,28 +544,52 @@ This diverse set enables assessment of SwapMC utility across a broad range of bi
 All ABFE calculations followed the identical FEP protocol and thermodynamic cycle as described in the Methods section, with SwapMC active throughout both the bound-state and solution-phase decoupling stages. \\
 \newline
 Table~\ref{tbl:abfe_jacs} presents ABFE results across the eight protein targets in the JACS benchmark set. 
+\textblue{
+In addition to the raw $\Delta G$ RMSE and $R^2$, we report the shifted dG RMSE 
+— computed after subtracting the per-target mean signed error to remove the systematic offset attributable to incomplete apo-to-holo conformational sampling 
+— and Kendall's $\tau$ to assess rank-ordering accuracy independently of absolute errors. 
+}
 SwapMC improved performance in six of eight systems, reducing $\Delta G$ RMSE relative to standard MD.
-The range of $\Delta G$ RMSE decreased from 1.67 $\sim$ 8.78 kcal/mol (no SwapMC) to 0.77 $\sim$ 4.94 kcal/mol (with SwapMC). 
+The range of $\Delta G$ RMSE decreased from 1.67 $\sim$ 8.78 kcal/mol (no SwapMC) to 0.77 $\sim$ 4.94 kcal/mol (with SwapMC).
 However, the magnitude of improvement shows substantial system-dependent variation, with particularly notable gains for systems where cavity water reorganization is the dominant sampling bottleneck. \\
 \newline
 The most substantial improvements occurred for PTP1B (RMSE 8.78 $\to$ 4.94 kcal/mol, 44\% reduction), TYK2 (2.51 $\to$ 1.35 kcal/mol, 46\% reduction), and CDK2 (3.99 $\to$ 2.04 kcal/mol, 49\% reduction), 
 where SwapMC enabled more accurate treatment of water displacement during ligand decoupling. 
-Concurrent $R^2$ improvements for these systems (CDK2: 0.09 $\to$ 0.55, TYK2: 0.40 $\to$ 0.47) indicate that SwapMC not only reduced absolute errors but also improved rank-ordering correlation with experimental data, suggesting more reliable discrimination of binding affinity differences. 
+Concurrent $R^2$ improvements for these systems (CDK2: 0.09 $\to$ 0.55, TYK2: 0.40 $\to$ 0.47) 
+\textblue{and Kendall's $\tau$ (CDK2: 0.20 $\to$ 0.38, TYK2: 0.38 $\to$ 0.50)} 
+indicate that SwapMC not only reduced absolute errors but also improved rank-ordering correlation with experimental data, suggesting more reliable discrimination of binding affinity differences. 
 Similar improvements appeared for BACE (RMSE 3.27 $\to$ 2.68 kcal/mol) and MCL1 (2.05 $\to$ 1.67 kcal/mol), supporting broad utility across targets with water-sensitive binding sites.\\
 \newline
 In contrast, two systems showed minimal or negligible benefit from SwapMC. P38 showed essentially unchanged accuracy (RMSE 3.22 $\to$ 3.25 kcal/mol), 
 with $R^2$ improvement (0.31 $\to$ 0.46) suggesting SwapMC slightly enhanced sampling efficiency without substantially reducing errors—consistent with this system's relatively hydrophobic ATP-binding site where water reorganization is limited. % CHECK the literatures for this!
-Thrombin showed a small accuracy degradation (RMSE 1.67 $\to$ 1.82 kcal/mol), though $R^2$ improved substantially (0.35 $\to$ 0.72), 
-indicating improved correlation despite slightly elevated RMSE. 
-This apparent contradiction reflects elimination of systematic bias: without SwapMC, Thrombin predictions fortuitously exhibited high $R^2$ despite substantial systematic errors, 
-whereas SwapMC corrected this bias at the cost of modest RMSE increase for some individual ligands. \\
+\textblue{
+Thrombin showed a small increase in raw $\Delta G$ RMSE (1.67 $\to$ 1.82 kcal/mol), 
+yet the shifted dG RMSE dropped substantially (1.31 $\to$ 0.57 kcal/mol) 
+and Kendall's $\tau$ improved markedly (0.38 $\to$ 0.60), 
+indicating that SwapMC corrected a systematic bias present in the no-SwapMC predictions 
+at the cost of a modest increase in raw RMSE for some individual ligands.
+} \\
+%Thrombin showed a small accuracy degradation (RMSE 1.67 $\to$ 1.82 kcal/mol), though $R^2$ improved substantially (0.35 $\to$ 0.72), 
+%indicating improved correlation despite slightly elevated RMSE. 
+%This apparent contradiction reflects elimination of systematic bias: without SwapMC, Thrombin predictions fortuitously exhibited high $R^2$ despite substantial systematic errors, 
+%whereas SwapMC corrected this bias at the cost of modest RMSE increase for some individual ligands. \\
 \newline
 The system-dependent variation in SwapMC benefit correlates with the magnitude of water displacement required during decoupling. 
 PTP1B's buried active site and kinase targets (P38, CDK2, JNK1, TYK2) show the largest improvements, consistent with these systems requiring substantial water network reorganization that benefits from enhanced sampling.
 In contrast, Thrombin's solvent-accessible binding site and BACE's moderate solvent exposure show smaller effects, 
 reflecting that water exchange kinetics are less rate-limiting for these more exposed cavities. 
+\textblue{
 These observations validate the mechanistic premise that SwapMC specifically addresses water-sampling-limited ABFE scenarios, 
-improving accuracy when water reorganization is the bottleneck but providing minimal benefit when other factors (force field accuracy, protein conformational sampling) dominate the prediction error.
+improving accuracy when water reorganization is the bottleneck but providing minimal benefit when other factors dominate the prediction error. 
+Such factors include, but are not limited to, force field inaccuracies, 
+insufficient protein conformational sampling, 
+ligand pose quality and binding mode ambiguity, 
+and errors in system preparation such as protonation state assignment 
+and tautomeric state selection 
+— factors that have been identified as dominant sources of error in practical FEP benchmarking contexts~\cite{Hahn_2024}.
+}
+%These observations validate the mechanistic premise that SwapMC specifically addresses water-sampling-limited ABFE scenarios, 
+%improving accuracy when water reorganization is the bottleneck but providing minimal benefit when other factors (force field accuracy, protein conformational sampling) dominate the prediction error.
 
 %The performance of SwapMC was also evaluated in the absolute binding free energy (ABFE) calculations.
 %During the ABFE calculations, the decoupling of the ligand from the protein cavity requires the water molecules in the cavity to be well sampled.
@@ -525,25 +603,67 @@ improving accuracy when water reorganization is the bottleneck but providing min
 %Compared to the results without SwapMC, the ABFE results with SwapMC show a significant improvement in the accuracy of the binding free energy calculations.
 %Most of the systems show a significant reduction in the dG RMSE, and the $R^2$ values are also improved.
 
-\begin{table}
-  \caption{ABFE Results for JACS set with and without SwapMC.}
+\begin{table}[ht]
+  \caption{
+    ABFE Results for JACS set with and without SwapMC.
+    Shifted dG RMSE is computed after subtracting the per-target mean signed error 
+    to remove the systematic contribution from incomplete apo-to-holo conformational sampling. 
+    Kendall's $\tau$ assesses rank-ordering accuracy.}
   \label{tbl:abfe_jacs}
-  \begin{tabular}{l|ll}
+  \centering
+  \footnotesize
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{l|cccc|cccc}
     \hline
-    System                    & No SwapMC     & With SwapMC    \\
-    dG RMSE ($R^2$)           &               &    \\
+    \multirow{2}{*}{System}
+      & \multicolumn{4}{c|}{No SwapMC}
+      & \multicolumn{4}{c}{With SwapMC} \\
+    \cline{2-9}
+      & \makecell{dG RMSE} & \makecell{$R^2$}
+      & \makecell{Shifted\\dG RMSE} & \makecell{Kendall's\\$\tau$}
+      & \makecell{dG RMSE} & \makecell{$R^2$}
+      & \makecell{Shifted\\dG RMSE} & \makecell{Kendall's\\$\tau$} \\
     \hline
-    BACE                      & 3.27 (0.25) & \textbf{2.68} (0.20)  \\
-    CDK2                      & 3.99 (0.09) & \textbf{2.04} (0.55)  \\
-    JNK1                      & 2.01 (0.48) & \textbf{0.77} (0.63)  \\
-    MCL1                      & 2.05 (0.34) & \textbf{1.67} (0.36)  \\
-    P38                       & 3.22 (0.31) & 3.25 (0.46) \\
-    PTP1B                     & 8.78 (0.29) & \textbf{4.94} (0.33) \\
-    Thrombin                  & 1.67 (0.35) & 1.82 (0.72) \\
-    TYK2                      & 2.51 (0.40) & \textbf{1.35} (0.47) \\
+    BACE     & 3.27 & 0.25 & 1.56 & 0.37 & \textbf{2.68} & 0.20 & 1.10 & 0.26 \\
+    CDK2     & 3.99 & 0.09 & 1.16 & 0.20 & \textbf{2.04} & 0.55 & 0.96 & 0.38 \\
+    JNK1     & 2.01 & 0.48 & 0.72 & 0.52 & \textbf{0.77} & 0.63 & 0.72 & 0.54 \\
+    MCL1     & 2.05 & 0.34 & 1.82 & 0.44 & \textbf{1.67} & 0.36 & 1.41 & 0.32 \\
+    P38      & 3.22 & 0.31 & 1.08 & 0.41 & 3.25          & 0.46 & 0.96 & 0.51 \\
+    PTP1B    & 8.78 & 0.29 & 1.82 & 0.38 & \textbf{4.94} & 0.33 & 1.51 & 0.38 \\
+    Thrombin & 1.67 & 0.35 & 1.31 & 0.38 & 1.82          & 0.72 & 0.57 & 0.60 \\
+    TYK2     & 2.51 & 0.40 & 1.14 & 0.38 & \textbf{1.35} & 0.47 & 1.07 & 0.50 \\
     \hline
   \end{tabular}
 \end{table}
+
+%\begin{table}
+%  \caption{ABFE Results for JACS set with and without SwapMC.}
+%  \label{tbl:abfe_jacs}
+%  \begin{tabular}{l|ll}
+%    \hline
+%    System                    & No SwapMC     & With SwapMC    \\
+%    dG RMSE ($R^2$)           &               &    \\
+%    Shifted dG RMSE (Kendall's $\tau$)   &               &    \\
+%    \hline
+%    BACE                      & 3.27 (0.25) & \textbf{2.68} (0.20)  \\
+%                              & 1.56 (0.37) & 1.10 (0.26) \\
+%    CDK2                      & 3.99 (0.09) & \textbf{2.04} (0.55)  \\
+%                              & 1.16 (0.20) & 0.96 (0.38) \\
+%    JNK1                      & 2.01 (0.48) & \textbf{0.77} (0.63)  \\
+%                              & 0.72 (0.52) & 0.72 (0.54) \\        
+%    MCL1                      & 2.05 (0.34) & \textbf{1.67} (0.36)  \\
+%                              & 1.82 (0.44) & 1.41 (0.32)           \\
+%    P38                       & 3.22 (0.31) & 3.25 (0.46) \\
+%                              & 1.08 (0.41) & 0.96 (0.51) \\
+%    PTP1B                     & 8.78 (0.29) & \textbf{4.94} (0.33) \\
+%                              & 1.82 (0.38) & 1.51 (0.38) \\
+%    Thrombin                  & 1.67 (0.35) & 1.82 (0.72) \\
+%                              & 1.31 (0.38) & 0.57 (0.60) \\
+%    TYK2                      & 2.51 (0.40) & \textbf{1.35} (0.47) \\
+%                              & 1.14 (0.38) & 1.07 (0.50) \\
+%    \hline
+%  \end{tabular}
+%\end{table}
 
 
 \section{Conclusion and Discussion}
