@@ -1,0 +1,4 @@
+dG:
+  r2: 0.3504
+  rmse: 1.6694 kcal/mol
+  Kendall's tau: 0.3818

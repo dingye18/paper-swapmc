@@ -1,0 +1,7 @@
+mol1,mol2,ddG_pred,std_ddG_pred,ddG_expt,std_ddG_expt,has_expt,ddG_diff
+11417 (no water pose),7806 (no water pose),0.4399,0.0278,1.9141,0.0000,True,1.4742
+7806 (no water pose),8696 (no water pose),-0.2421,0.0258,-1.1507,0.0000,True,0.9086
+11417 (no water pose),8696 (no water pose),-0.1313,0.0235,0.7634,0.0000,True,0.8947
+10302 (1GJ7 no water pose),7806 (no water pose),1.2862,0.0284,2.1709,0.0000,True,0.8847
+10302 (1GJ7 no water pose),11417 (no water pose),1.1220,0.0228,0.2568,0.0000,True,0.8652
+10302 (1GJ7 no water pose),8696 (no water pose),1.0233,0.0241,1.0202,0.0000,True,0.0030

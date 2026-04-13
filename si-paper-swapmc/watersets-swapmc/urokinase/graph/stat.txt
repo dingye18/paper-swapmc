@@ -1,0 +1,6 @@
+dG:
+  r2: 0.5436
+  rmse: 0.5801 kcal/mol
+ddG:
+  r2: 0.3166
+  rmse: 0.9426 kcal/mol

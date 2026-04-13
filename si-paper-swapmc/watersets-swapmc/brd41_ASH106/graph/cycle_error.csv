@@ -1,0 +1,6 @@
+cycle,dG,std_dG,hysteresis
+cmpd 9 (methoxyethyl)->cmpd 2 (methyl)->cmpd 8 (n-Butyl)->cmpd 9 (methoxyethyl),0.086,0.046,0.061
+cmpd 2 (methyl)->cmpd 3 (Allyl)->cmpd 4 (Crotyl)->cmpd 2 (methyl),-0.651,0.042,0.461
+cmpd 2 (methyl)->cmpd 6 (ethyl)->cmpd 7 (n-propyl)->cmpd 2 (methyl),-0.132,0.041,0.093
+cmpd 2 (methyl)->cmpd 5 (1-Butenyl)->cmpd 7 (n-propyl)->cmpd 2 (methyl),0.210,0.043,0.149
+cmpd 2 (methyl)->cmpd 6 (ethyl)->cmpd 7 (n-propyl)->cmpd 5 (1-Butenyl)->cmpd 2 (methyl),-0.342,0.048,0.197

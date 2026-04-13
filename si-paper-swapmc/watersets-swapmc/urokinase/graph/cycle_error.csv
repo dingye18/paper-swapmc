@@ -1,0 +1,8 @@
+cycle,dG,std_dG,hysteresis
+10302 (1GJ7 no water pose)->7806 (no water pose)->11417 (no water pose)->10302 (1GJ7 no water pose),-0.276,0.046,0.195
+10302 (1GJ7 no water pose)->7806 (no water pose)->8696 (no water pose)->10302 (1GJ7 no water pose),0.021,0.045,0.015
+10302 (1GJ7 no water pose)->8696 (no water pose)->11417 (no water pose)->10302 (1GJ7 no water pose),0.033,0.041,0.023
+7806 (no water pose)->11417 (no water pose)->8696 (no water pose)->7806 (no water pose),-0.329,0.045,0.233
+10302 (1GJ7 no water pose)->7806 (no water pose)->11417 (no water pose)->8696 (no water pose)->10302 (1GJ7 no water pose),-0.308,0.052,0.178
+10302 (1GJ7 no water pose)->7806 (no water pose)->8696 (no water pose)->11417 (no water pose)->10302 (1GJ7 no water pose),0.053,0.050,0.031
+10302 (1GJ7 no water pose)->8696 (no water pose)->7806 (no water pose)->11417 (no water pose)->10302 (1GJ7 no water pose),-0.297,0.050,0.171

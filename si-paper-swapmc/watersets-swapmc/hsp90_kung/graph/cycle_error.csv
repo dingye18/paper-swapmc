@@ -1,0 +1,35 @@
+cycle,dG,std_dG,hysteresis
+cmpd 16->cmpd 13->cmpd 10->cmpd 16,-0.451,0.048,0.319
+cmpd 16->cmpd 13->cmpd 17->cmpd 16,-0.121,0.042,0.086
+cmpd 9->cmpd 11->cmpd 12->cmpd 9,-0.092,0.038,0.065
+cmpd 7->cmpd 12->cmpd 9->cmpd 7,0.405,0.053,0.286
+cmpd 11->cmpd 12->cmpd 15->cmpd 11,-0.005,0.041,0.003
+cmpd 14->cmpd 8->cmpd 10->cmpd 16->cmpd 14,1.279,0.081,0.738
+cmpd 14->cmpd 8->cmpd 7->cmpd 9->cmpd 14,0.787,0.075,0.454
+cmpd 14->cmpd 16->cmpd 13->cmpd 9->cmpd 14,0.104,0.048,0.060
+cmpd 16->cmpd 10->cmpd 13->cmpd 17->cmpd 16,0.330,0.054,0.190
+cmpd 9->cmpd 11->cmpd 12->cmpd 7->cmpd 9,-0.497,0.058,0.287
+cmpd 9->cmpd 11->cmpd 15->cmpd 12->cmpd 9,-0.088,0.047,0.051
+cmpd 14->cmpd 8->cmpd 10->cmpd 13->cmpd 16->cmpd 14,1.730,0.083,0.865
+cmpd 14->cmpd 8->cmpd 10->cmpd 13->cmpd 9->cmpd 14,1.834,0.083,0.917
+cmpd 14->cmpd 8->cmpd 7->cmpd 12->cmpd 9->cmpd 14,1.192,0.077,0.596
+cmpd 14->cmpd 16->cmpd 10->cmpd 13->cmpd 9->cmpd 14,0.555,0.058,0.277
+cmpd 14->cmpd 16->cmpd 17->cmpd 13->cmpd 9->cmpd 14,0.225,0.054,0.113
+cmpd 8->cmpd 10->cmpd 13->cmpd 9->cmpd 7->cmpd 8,1.047,0.071,0.523
+cmpd 9->cmpd 13->cmpd 17->cmpd 15->cmpd 11->cmpd 9,-0.213,0.055,0.106
+cmpd 9->cmpd 13->cmpd 17->cmpd 15->cmpd 12->cmpd 9,-0.301,0.054,0.150
+cmpd 9->cmpd 11->cmpd 15->cmpd 12->cmpd 7->cmpd 9,-0.493,0.064,0.246
+cmpd 14->cmpd 8->cmpd 10->cmpd 13->cmpd 17->cmpd 16->cmpd 14,1.608,0.087,0.719
+cmpd 14->cmpd 8->cmpd 10->cmpd 16->cmpd 13->cmpd 9->cmpd 14,1.383,0.088,0.618
+cmpd 14->cmpd 8->cmpd 7->cmpd 12->cmpd 11->cmpd 9->cmpd 14,1.284,0.080,0.574
+cmpd 14->cmpd 8->cmpd 7->cmpd 9->cmpd 13->cmpd 16->cmpd 14,0.683,0.082,0.305
+cmpd 14->cmpd 16->cmpd 10->cmpd 8->cmpd 7->cmpd 9->cmpd 14,-0.492,0.076,0.220
+cmpd 14->cmpd 16->cmpd 17->cmpd 15->cmpd 11->cmpd 9->cmpd 14,0.012,0.059,0.006
+cmpd 14->cmpd 16->cmpd 17->cmpd 15->cmpd 12->cmpd 9->cmpd 14,-0.075,0.058,0.034
+cmpd 8->cmpd 10->cmpd 13->cmpd 9->cmpd 12->cmpd 7->cmpd 8,0.642,0.073,0.287
+cmpd 8->cmpd 10->cmpd 16->cmpd 13->cmpd 9->cmpd 7->cmpd 8,0.596,0.076,0.266
+cmpd 16->cmpd 13->cmpd 9->cmpd 11->cmpd 15->cmpd 17->cmpd 16,0.092,0.059,0.041
+cmpd 16->cmpd 13->cmpd 9->cmpd 12->cmpd 15->cmpd 17->cmpd 16,0.179,0.058,0.080
+cmpd 9->cmpd 13->cmpd 17->cmpd 15->cmpd 11->cmpd 12->cmpd 9,-0.305,0.059,0.136
+cmpd 9->cmpd 13->cmpd 17->cmpd 15->cmpd 12->cmpd 11->cmpd 9,-0.208,0.058,0.093
+cmpd 9->cmpd 13->cmpd 17->cmpd 15->cmpd 12->cmpd 7->cmpd 9,-0.705,0.069,0.315

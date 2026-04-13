@@ -1,0 +1,11 @@
+cycle,dG,std_dG,hysteresis
+12 docked->15 docked->21 (Xtal)->12 docked,1.330,0.063,0.940
+20->21 (Xtal)->24 pose 2->20,-0.479,0.056,0.338
+18 docked->19->21 (Xtal)->18 docked,-0.470,0.053,0.332
+22->16 docked->21 (Xtal)->22,-0.510,0.050,0.361
+16 docked->14 docked->21 (Xtal)->16 docked,0.391,0.052,0.277
+16 docked->11 docked->21 (Xtal)->16 docked,0.192,0.055,0.136
+13 docked->17 torsion adjust->21 (Xtal)->13 docked,1.419,0.058,1.003
+22->16 docked->14 docked->21 (Xtal)->22,-0.119,0.058,0.069
+22->16 docked->11 docked->21 (Xtal)->22,-0.319,0.061,0.184
+16 docked->14 docked->21 (Xtal)->11 docked->16 docked,0.200,0.062,0.115

@@ -1,0 +1,12 @@
+mol1,mol2,ddG_pred,std_ddG_pred,ddG_expt,std_ddG_expt,has_expt,ddG_diff
+cmpd 5 (1-Butenyl),cmpd 7 (n-propyl),0.2740,0.0293,1.8800,0.0000,True,1.6060
+cmpd 2 (methyl),cmpd 9 (methoxyethyl),0.6702,0.0315,2.1700,0.0000,True,1.4998
+cmpd 9 (methoxyethyl),cmpd 8 (n-Butyl),0.2673,0.0235,-0.5900,0.0000,True,0.8573
+cmpd 2 (methyl),cmpd 7 (n-propyl),1.0321,0.0305,1.7400,0.0000,True,0.7079
+cmpd 2 (methyl),cmpd 6 (ethyl),0.7159,0.0287,1.3300,0.0000,True,0.6141
+cmpd 2 (methyl),cmpd 3 (Allyl),0.9500,0.0306,1.5200,0.0000,True,0.5700
+cmpd 2 (methyl),cmpd 8 (n-Butyl),1.0257,0.0327,1.5800,0.0000,True,0.5543
+cmpd 2 (methyl),cmpd 5 (1-Butenyl),0.3863,0.0247,-0.1400,0.0000,True,0.5263
+cmpd 3 (Allyl),cmpd 4 (Crotyl),0.0210,0.0218,-0.3700,0.0000,True,0.3910
+cmpd 6 (ethyl),cmpd 7 (n-propyl),0.3009,0.0217,0.4100,0.0000,True,0.1091
+cmpd 2 (methyl),cmpd 4 (Crotyl),1.2581,0.0315,1.1500,0.0000,True,0.1081

@@ -1,0 +1,5 @@
+dG_shifted:
+  r2: 0.4659
+  rmse: 1.0659 kcal/mol
+  Kendall's tau: 0.5000
+  Shifted energy: 3.479391250000006 kcal/mol
