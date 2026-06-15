@@ -32,6 +32,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand*\YE[1]{Ye: \texttt{\textbf{#1}}}
 \newcommand*{\textblue}[1]{\textcolor{black}{#1}}
+\newcommand*{\textred}[1]{\textcolor{red}{#1}}
+
 
 %%\newcommand{\YE}[1]{\textcolor{blue}{#1}}
 
@@ -369,10 +371,16 @@ To validate the SwapMC method, we evaluated its performance on two complementary
 and (2) the JACS set of 8 diverse protein targets for absolute binding free energy calculations. 
 These benchmarks were specifically chosen because poor water sampling has been identified as a primary source of error in conventional FEP calculations for these systems~\cite{ross2020enhancing, Liu2025, luccarelli2010effects, Ge2022}. \\
 \newline
-Our validation strategy progresses through three stages: 
-(1) demonstrating that SwapMC accelerates water equilibration through direct sampling analysis, 
-(2) evaluating RBFE accuracy and comparing with GCMC benchmarks, including robustness assessment across different initial water configurations, 
-and (3) extending validation to ABFE calculations. 
+\textred{
+Our validation strategy comprises three stages: 
+(1) demonstrating that SwapMC accelerates water equilibration via direct sampling analysis; 
+(2) evaluating RBFE accuracy by comparison with GCMC benchmarks, 
+including robustness assessments across different initial water configurations, 
+as well as comparisons for systems without water sampling challenges to confirm 
+that SwapMC does not impair performance when water sampling is not a limiting factor; 
+and 
+(3) extending validation to ABFE calculations.
+}
 %All calculations utilized identical benchmark systems, transformations, and experimental data as Ross et al. for rigorous comparison.
 For direct comparison with GCMC, we utilized identical protein systems, alchemical transformation edges, and experimental reference data as Ross et al~\cite{ross2020enhancing}. \\
 \newline
@@ -462,6 +470,7 @@ This 4.59 kcal/mol improvement demonstrating that inadequate water sampling was 
 \end{figure}
 
 \subsection{Performance on RBFE Calculations}
+\noindent
 Water sampling was substantially improved by the SwapMC method, 
 enabling reliable application of RBFE calculations to systems where water displacement plays a critical role in binding. 
 Using the water-displacement benchmark introduced by Ross et al.~\cite{ross2020enhancing}, 
@@ -529,6 +538,43 @@ supporting the conclusion that SwapMC provides an effective and practically attr
     \hline
   \end{tabular}
 \end{table}
+
+\noindent
+\textred{
+To confirm that SwapMC does not introduce bias in systems where conventional 
+MD already achieves adequate water equilibration, we performed RBFE calculations 
+on two targets from the JACS benchmark set~\cite{wang2015accurate} --- TYK2 and JNK1 
+--- which serve as representative negative controls. \\
+\newline
+\noindent
+TYK2 (PDB: 4GIH) features a solvent-accessible ATP-binding site in which the 
+JACS ligand series involves primarily R-group substitutions that do not require 
+displacement of buried water molecules (Figure.~\ref{fig:tyk2_jnk1_ddg} A). 
+JNK1 (PDB: 2GMX) similarly presents a solvent-exposed kinase hinge region (Figure.~\ref{fig:tyk2_jnk1_ddg} C) where the ligand series involves modifications to solvent-exposed groups, 
+and the dominant sampling challenge is ligand conformational degrees of freedom rather than cavity water exchange~\cite{wang2015accurate}. 
+In both systems, the water occupancy at the binding site is not significantly perturbed across the ligand series, and standard MD is expected to equilibrate the hydration network within the simulation timescale. \\
+\newline
+\noindent
+The panel B and D in Figure~\ref{fig:tyk2_jnk1_ddg} shows the $\Delta\Delta G$ predictions from simulations with and without SwapMC for both TYK2 and JNK1. 
+The two protocols yield excellent mutual agreement, with data points scattered closely when compared with the experimental data, 
+indicating that SwapMC has negligible effect on the predicted relative binding free energies for these systems. 
+This is in sharp contrast to the water-displacement benchmark~\cite{ross2020enhancing}, 
+where enabling SwapMC produces substantial corrections to $\Delta\Delta G$ predictions (see Table~\ref{tbl:rbfe_watersets}). 
+The selectivity of SwapMC --- effective where water exchange is the bottleneck, neutral otherwise --- provides important validation that the method does not introduce systematic errors or artifacts in well-sampled protein--ligand systems.
+}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/tyk2_jnk1_rbfe_swapmc.png}
+    \caption{Comparison of $\Delta\Delta G$ predictions with and without SwapMC for TYK2 and JNK1 from the JACS benchmark set.
+    Both TYK2's pocket structure (panel A) and JNK1's hinge region (panel C) are solvent-exposed, 
+    and the perturbation part (circled by red lines) of the ligand series does not involve significant water sampling issues.
+    Data points in panel B and D show the $\Delta\Delta G$ predictions with and without SwapMC for TYK2 and JNK1, respectively.
+    The RMSE for TYK2 is 0.76~kcal/mol without SwapMC and 0.80~kcal/mol with SwapMC, 
+    while for JNK1, the RMSE is 0.83~kcal/mol without SwapMC and 0.75~kcal/mol with SwapMC.
+    }
+    \label{fig:tyk2_jnk1_ddg}
+\end{figure}
+
 
 \subsection{Performance on ABFE Calculations}
 To extend our evaluation beyond relative binding free energy calculations, we assessed SwapMC performance on absolute binding free energy (ABFE) calculations, where the sampling challenge is more stringent. 

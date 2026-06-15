@@ -1,0 +1,205 @@
+\documentclass[doublespace,prb,aps]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{lipsum} % to generate some filler text
+\usepackage{fullpage}
+\usepackage{mathrsfs}
+\usepackage{svg}
+\usepackage{xr}
+\usepackage{amsthm,url,graphicx,booktabs,lipsum,color,bm,caption,subcaption,soul}
+\usepackage{pifont,tikz,paralist,multirow,amssymb}
+\usepackage{chemarr,natbib}
+\usepackage{xifthen}
+\usepackage{enumerate}
+\usepackage{titlesec}
+\newcounter{reviewer}
+\setcounter{reviewer}{0}
+\newcounter{point}[reviewer]
+\setcounter{point}{0}
+
+% This refines the format of how the reviewer/point reference will appear.
+%\renewcommand{\thepoint}{C\,2.\arabic{point}}
+
+\renewcommand{\thepoint}{Comment\,2.\arabic{point}}
+
+% command declarations for reviewer points and our responses
+
+\newenvironment{point1}
+   {\refstepcounter{point} \bigskip \noindent {\textbf{Associate Editor Comment~}} ---\ }
+   {\par }
+
+\newcommand{\reviewersection}{\stepcounter{reviewer} \bigskip \hrule
+                  \section*{Reviewer 2}}
+
+% \newenvironment{point}
+
+%    {\refstepcounter{point} \bigskip \noindent {\textbf{Reviewer~\thepoint} } ---\ }
+%    {\par }
+
+\newenvironment{point}
+   {\refstepcounter{point} \bigskip \noindent {\textbf{Reviewer~\thepoint} } ---\ }
+   {\par }
+
+
+\newcommand{\shortpoint}[1]{\refstepcounter{point}   \bigskip \noindent 
+	{\textbf{Reviewer~Point~\thepoint} } ---~#1  }
+
+\newenvironment{reply}
+   {\medskip \noindent \color{black} \begin{sf}\textbf{Reply}:\  }
+   {\medskip \par \end{sf}}
+
+\newenvironment{revision}
+   {\medskip \noindent \color{blue} \begin{sf}\textbf{Revision}:\textit{\ }}
+   {\medskip \par \end{sf}}
+
+
+\newcommand{\shortreply}[2][]{\medskip \noindent \begin{sf}\textbf{Reply}:\  #2
+	\ifthenelse{\equal{#1}{}}{}{ \hfill \footnotesize (#1)}%
+	\medskip \end{sf}}
+
+\makeatletter
+\newcommand*{\addFileDependency}[1]{% argument=file name and extension
+  \typeout{(#1)}
+  \@addtofilelist{#1}
+  \IfFileExists{#1}{}{\typeout{No file #1.}}
+}
+\makeatother
+
+\newcommand*{\myexternaldocument}[1]{%
+    \externaldocument{#1}%
+    \addFileDependency{#1.tex}%
+    \addFileDependency{#1.aux}%
+}
+
+\myexternaldocument{main}
+%\externaldocument[I-]{main}
+
+
+\def\thesubsubsection{\arabic{subsubsection}}
+\titleformat{\subsubsection}[runin]
+{\normalfont\bfseries}
+{\indent\thesubsubsection)}{0.5em}{}
+
+
+\begin{document}
+\section*{Notes on revision made to manuscript Paper  \\
+$\#$ct-2026-001787: Improving binding free energy predictions with Swap Monte Carlo for water sampling 
+}
+\vspace{10pt}
+
+The authors sincerely thank the editor and all reviewers for their careful reading of the manuscript and for providing thoughtful, constructive comments. 
+We have carefully considered each point and revised the manuscript accordingly. 
+Significant changes in the revised manuscript are highlighted in \textcolor{blue}{blue} for the reviewers' convenience. 
+Our point-by-point responses are provided below.
+% Let's start point-by-point with Reviewer 1
+
+%\section*{Response to the Associate Editor}
+% General intro text goes here
+%\begin{point1}
+%For your work, I have received three independent review reports from experts 
+%\end{point1}
+
+
+%\begin{reply}
+%Thank you so much for your constructive comments. 
+
+%\end{reply}
+
+\section*{Response to the reviewers}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\reviewersection
+%This is an interesting MC study on water sampling in the context of MD simulations/free energy calculations, 
+%and I believe it will be of significant interest to workers in the area. 
+%However, there are several aspects I would recommend improving.
+
+% Point one description 
+%\begin{reply}
+%We thank the reviewer for the positive assessment and for the detailed suggestions, 
+%which have helped strengthen the manuscript.
+%\end{reply}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\reviewersection
+The authors provided some more details in their implementation in the revised version of manuscript, which is helpful. 
+However, two key questions remain unaddressed in the revised manuscript which I think it is necessary to address before the paper can be published. 
+
+
+%%%%%%%%%%%%%%%%
+\begin{point}
+The authors' response regarding control experiment on systems where water sampling is not an issue does not address my comments. 
+The authors response "constructing standalone validation systems such as ideal gas or pure bulk water boxes would require substantial re-engineering that is beyond the scope of the present work." does not seem reasonable. 
+Even if constructing standalone validation systems such as ideal gas or pure bulk water boxes is not straightforward in their current code, 
+there are tons of perturbations in the water exposed region where water sampling is not an issue in regular FEP, 
+and the authors could run such systems with and without water Swap to confirm the results are consistent. 
+This is particularly important, as the authors do not make the code available for others to test and verify, 
+thus the authors need to perform a thorough validation by themselves. \label{comment_22}
+\end{point}
+
+\begin{reply}
+We thank the reviewer for the constructive suggestion.
+We fully agree that a control experiment on systems where water sampling is not a limiting factor is essential 
+to confirm that SwapMC does not introduce artifacts or bias when applied to well-sampled systems. \\
+\newline
+Following the reviewer's advice, we selected TYK2 (PDB: 4GIH) and JNK1 (PDB: 2GMX)
+from the JACS benchmark set as negative controls, as both systems feature
+solvent-exposed binding sites where cavity water exchange is not a bottleneck
+for standard MD~(\cite{wang2015accurate}).
+RBFE calculations with and without SwapMC on these two systems show excellent
+mutual agreement (TYK2: RMSE 0.76 vs.\ 0.80~kcal/mol; JNK1: RMSE 0.83 vs.\
+0.75~kcal/mol), confirming that SwapMC introduces no systematic bias in
+well-sampled systems.
+The analysis and figure have been added to the revised manuscript,
+highlighted in \textcolor{red}{red}.
+\end{reply}
+
+\begin{revision}
+To confirm that SwapMC does not introduce bias in systems where conventional 
+MD already achieves adequate water equilibration, we performed RBFE calculations 
+on two targets from the JACS benchmark set~(\cite{wang2015accurate}) --- TYK2 and JNK1 
+--- which serve as representative negative controls. \\
+\newline
+\noindent
+TYK2 (PDB: 4GIH) features a solvent-accessible ATP-binding site in which the 
+JACS ligand series involves primarily R-group substitutions that do not require 
+displacement of buried water molecules (Figure.~\ref{fig:tyk2_jnk1_ddg} A). 
+JNK1 (PDB: 2GMX) similarly presents a solvent-exposed kinase hinge region (Figure.~\ref{fig:tyk2_jnk1_ddg} C) where the ligand series involves modifications to solvent-exposed groups, 
+and the dominant sampling challenge is ligand conformational degrees of freedom rather than cavity water exchange~(\cite{wang2015accurate}). 
+In both systems, the water occupancy at the binding site is not significantly perturbed across the ligand series, and standard MD is expected to equilibrate the hydration network within the simulation timescale. \\
+\newline
+\noindent
+The panel B and D in Figure~\ref{fig:tyk2_jnk1_ddg} shows the $\Delta\Delta G$ predictions from simulations with and without SwapMC for both TYK2 and JNK1. 
+The two protocols yield excellent mutual agreement, with data points scattered closely when compared with the experimental data, 
+indicating that SwapMC has negligible effect on the predicted relative binding free energies for these systems. 
+This is in sharp contrast to the water-displacement benchmark~\cite{ross2020enhancing}, 
+where enabling SwapMC produces substantial corrections to $\Delta\Delta G$ predictions (see Table~1). 
+The selectivity of SwapMC --- effective where water exchange is the bottleneck, neutral otherwise --- provides important validation that the method does not introduce systematic errors or artifacts in well-sampled protein--ligand systems.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\linewidth]{../figures/tyk2_jnk1_rbfe_swapmc.png}
+    \caption{Comparison of $\Delta\Delta G$ predictions with and without SwapMC for TYK2 and JNK1 from the JACS benchmark set.
+    Both TYK2's pocket structure (panel A) and JNK1's hinge region (panel C) are solvent-exposed, 
+    and the perturbation part (circled by red lines) of the ligand series does not involve significant water sampling issues.
+    Data points in panel B and D show the $\Delta\Delta G$ predictions with and without SwapMC for TYK2 and JNK1, respectively.
+    The RMSE for TYK2 is 0.76~kcal/mol without SwapMC and 0.80~kcal/mol with SwapMC, 
+    while for JNK1, the RMSE is 0.83~kcal/mol without SwapMC and 0.75~kcal/mol with SwapMC.
+    }
+    \label{fig:tyk2_jnk1_ddg}
+\end{figure}
+\end{revision}
+
+%%%%%%%%%%%%%%%%
+\begin{point}
+Given the method is implemented in a commercial software not available to general public, 
+the authors need to provide a way for reviewers to run some test systems to confirm the findings reported in the paper.
+\end{point}
+
+\begin{reply}
+We thank the reviewer for this comment.
+\end{reply}
+
+\bibliography{ref,common_ref}
+\bibliographystyle{chicago}
+\end{document}
