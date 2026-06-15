@@ -49,7 +49,7 @@
    {\medskip \par \end{sf}}
 
 \newenvironment{revision}
-   {\medskip \noindent \color{blue} \begin{sf}\textbf{Revision}:\textit{\ }}
+   {\medskip \noindent \color{red} \begin{sf}\textbf{Revision}:\textit{\ }}
    {\medskip \par \end{sf}}
 
 
@@ -89,7 +89,7 @@ $\#$ct-2026-001787: Improving binding free energy predictions with Swap Monte Ca
 
 The authors sincerely thank the editor and all reviewers for their careful reading of the manuscript and for providing thoughtful, constructive comments. 
 We have carefully considered each point and revised the manuscript accordingly. 
-Significant changes in the revised manuscript are highlighted in \textcolor{blue}{blue} for the reviewers' convenience. 
+Significant changes in the revised manuscript are highlighted in \textcolor{red}{red} for the reviewers' convenience. 
 Our point-by-point responses are provided below.
 % Let's start point-by-point with Reviewer 1
 
@@ -190,6 +190,7 @@ The selectivity of SwapMC --- effective where water exchange is the bottleneck, 
 \end{figure}
 \end{revision}
 
+\newpage
 %%%%%%%%%%%%%%%%
 \begin{point}
 Given the method is implemented in a commercial software not available to general public, 
@@ -197,7 +198,28 @@ the authors need to provide a way for reviewers to run some test systems to conf
 \end{point}
 
 \begin{reply}
-We thank the reviewer for this comment.
+We thank the reviewer for this important concern regarding independent verification.
+We fully appreciate that, as SwapMC is implemented within the Uni-FEP commercial 
+framework, external access for direct testing is not straightforward. \\
+\newline
+\noindent
+To address this, we have prepared a dedicated remote machine (2$\times$ NVIDIA RTX 4090 
+GPUs) that the reviewer may access via SSH to independently run and verify the 
+calculations reported in this paper.
+The SSH key file is provided as a supplementary attachment in the Supporting 
+Information and will remain valid through July 15, 2026; 
+should the reviewer require additional time, we are happy to extend access upon request.
+Upon login, a subset of the benchmark systems presented in this work has been 
+pre-configured in the directory \texttt{/root/paper-swapmc-example-cases}, 
+including representative systems from three categories covered in the manuscript:
+\begin{itemize}
+    \item \textbf{ABFE}: Thrombin
+    \item \textbf{RBFE, JACS set (negative controls)}: TYK2 and JNK1
+    \item \textbf{RBFE, water-displacement set}: HSP90\_Kung and HSP90\_Woodhead
+\end{itemize} 
+\noindent
+We hope this arrangement provides a practical and convenient pathway for 
+the reviewer to independently verify the key findings reported in the manuscript.
 \end{reply}
 
 \bibliography{ref,common_ref}
